@@ -23,14 +23,7 @@ export default function App() {
         </main>
 
         <footer className="mt-2 pt-4 flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-400 text-xs hover:text-white"
-            onClick={() => openUrl("https://base.org/builders/minikit")}
-          >
-            Built on Base with MiniKit
-          </Button>
+          Built on Base
         </footer>
       </div>
     </div>
