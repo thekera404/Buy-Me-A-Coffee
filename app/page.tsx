@@ -19,9 +19,13 @@ export default function App() {
         <main className="flex-1">
           <Home />
         </main>
-
-        <footer className="mt-2 pt-4 flex justify-center">
-          Built on Base
+        <footer className="mt-6 pt-6 flex justify-center">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+            <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
+              <div className="w-2 h-2 bg-white rounded-sm"></div>
+            </div>
+            <span className="text-sm text-gray-300 font-medium">Built on Base</span>
+          </div>
         </footer>
       </div>
     </div>
