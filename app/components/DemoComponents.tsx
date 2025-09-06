@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
-import { BasePayButton as BrandedBasePayButton } from "./BrandedBasePayButton";
 import { BasePayButton } from "./base-pay-button";
 
 // Reusable Button
