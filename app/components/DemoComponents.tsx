@@ -128,11 +128,7 @@ export function Features({ setActiveTab }: FeaturesProps) {
   );
 }
 
-type HomeProps = {
-  setActiveTab: (tab: string) => void;
-};
-
-export function Home(_: HomeProps) {
+export function Home() {
   return (
     <div className="space-y-6 animate-fade-in">
       <DonateCard />
