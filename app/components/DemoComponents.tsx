@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useState } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
 // Removed unused BasePayButton import in favor of local branded button
-import { BrandedBasePayButton } from "./BrandedBasePayButton";
+import { BasePayButtonOfficial } from "./BasePayButtonOfficial";
 
 type ButtonProps = {
   children: ReactNode;
@@ -146,7 +146,8 @@ function DonateCard() {
   const defaultRecipient = process.env.NEXT_PUBLIC_DONATION_RECIPIENT || "";
   const testnet = (process.env.NEXT_PUBLIC_BASEPAY_TESTNET || "false") === "true";
 
-  const [amount, setAmount] = useState<string>("1.00");
+  const [selectedAmount, setSelectedAmount] = useState<number>(3);
+  const [customAmount, setCustomAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(defaultRecipient);
   const emailOptional = true;
   const [status, setStatus] = useState<"idle" | "paying" | "checking" | "success" | "error">("idle");
@@ -171,7 +172,8 @@ function DonateCard() {
     setMessage("");
 
     try {
-      const parsed = Number.parseFloat(amount);
+      const currentAmount = customAmount ? Number.parseFloat(customAmount) : selectedAmount;
+      const parsed = Number.parseFloat(String(currentAmount));
       if (Number.isNaN(parsed) || parsed <= 0) {
         throw new Error("Enter a valid amount in USD");
       }
@@ -206,7 +208,7 @@ function DonateCard() {
       const e = err as Error;
       setMessage(e?.message || "Payment failed");
     }
-  }, [recipient, amount, testnet, emailOptional]);
+  }, [recipient, selectedAmount, customAmount, testnet, emailOptional]);
 
   return (
     <div className="min-h-[70vh] p-2 sm:p-4">
@@ -218,8 +220,32 @@ function DonateCard() {
           </p>
         </div>
 
-        <Card title="Choose Amount">
+        <Card title="Choose Amount" className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)]">
           <div className="space-y-5">
+            {/* Preset amounts */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {[1, 3, 5].map((amt) => {
+                const active = !customAmount && selectedAmount === amt;
+                return (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => {
+                      setSelectedAmount(amt);
+                      setCustomAmount("");
+                    }}
+                    className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0052FF] ${
+                      active
+                        ? "bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
+                        : "bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] text-gray-200 border border-[rgba(255,255,255,0.15)]"
+                    }`}
+                  >
+                    ${amt}
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="space-y-2">
               <label className="block text-xs text-[var(--app-foreground-muted)]">Amount (USD)</label>
               <div className="relative w-full max-w-xs">
@@ -229,8 +255,11 @@ function DonateCard() {
                   min="0.01"
                   step="0.01"
                   placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  value={customAmount}
+                  onChange={(e) => {
+                    setCustomAmount(e.target.value);
+                    setSelectedAmount(0);
+                  }}
                   className="pl-7 w-full max-w-xs px-3 py-2 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)]"
                 />
               </div>
@@ -267,17 +296,25 @@ function DonateCard() {
       </div>
     </Card>
 
-        {Number.parseFloat(amount || "0") > 0 && (
+        {(customAmount ? Number.parseFloat(customAmount || "0") : selectedAmount) > 0 && (
           <div className="mt-4 sm:mt-5 border border-blue-500/30 bg-blue-500/10 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-[var(--app-foreground-muted)]">Total Amount:</span>
-              <span className="text-lg sm:text-xl font-bold text-white">${Number.parseFloat(amount || "0").toFixed(2)} USDC</span>
+              <span className="text-lg sm:text-xl font-bold text-white">${(customAmount ? Number.parseFloat(customAmount || "0") : selectedAmount).toFixed(2)} USDC</span>
             </div>
           </div>
         )}
 
         <div className="mt-4 sm:mt-5 w-full">
-          <BrandedBasePayButton colorScheme="dark" onClick={handlePayment} />
+          <BasePayButtonOfficial
+            theme="dark"
+            onClick={handlePayment}
+            disabled={
+              !(customAmount ? Number.parseFloat(customAmount || "0") > 0 : selectedAmount > 0) ||
+              !isValidAddress(recipient)
+            }
+            loading={status === "paying" || status === "checking"}
+          />
         </div>
 
         {status !== "idle" && (
