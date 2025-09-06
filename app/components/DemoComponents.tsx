@@ -1,20 +1,19 @@
 "use client";
 
-import { type ReactNode, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
-// Removed unused BasePayButton import in favor of local branded button
-import { BasePayButtonOfficial } from "./BasePayButtonOfficial";
+import { BasePayButton as BrandedBasePayButton } from "./BrandedBasePayButton";
 
+// Reusable Button
 type ButtonProps = {
-  children: ReactNode;
+  children: React.ReactNode;
   variant?: "primary" | "secondary" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
   className?: string;
   onClick?: () => void;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
-  icon?: ReactNode;
-}
+};
 
 export function Button({
   children,
@@ -24,7 +23,6 @@ export function Button({
   onClick,
   disabled = false,
   type = "button",
-  icon,
 }: ButtonProps) {
   const baseClasses =
     "inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052FF] disabled:opacity-50 disabled:pointer-events-none";
@@ -38,13 +36,13 @@ export function Button({
       "border border-[var(--app-accent)] hover:bg-[var(--app-accent-light)] text-[var(--app-accent)]",
     ghost:
       "hover:bg-[var(--app-accent-light)] text-[var(--app-foreground-muted)]",
-  };
+  } as const;
 
   const sizeClasses = {
     sm: "text-xs px-2.5 py-1.5 rounded-md",
     md: "text-sm px-4 py-2 rounded-lg",
     lg: "text-base px-6 py-3 rounded-lg",
-  };
+  } as const;
 
   return (
     <button
@@ -53,45 +51,33 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
     >
-      {icon && <span className="flex items-center mr-2">{icon}</span>}
       {children}
     </button>
   );
 }
 
-type CardProps = {
-  title?: string;
-  children: ReactNode;
-  className?: string;
-  onClick?: () => void;
-}
-
+// Reusable Card
 function Card({
   title,
   children,
   className = "",
-  onClick,
-}: CardProps) {
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (onClick && (e.key === "Enter" || e.key === " ")) {
-      e.preventDefault();
-      onClick();
-    }
-  };
-
+}: {
+  title?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div
-      className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl shadow-lg border border-[var(--app-card-border)] overflow-hidden transition-all hover:shadow-xl ${className} ${onClick ? "cursor-pointer" : ""}`}
-      onClick={onClick}
-      onKeyDown={onClick ? handleKeyDown : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      role={onClick ? "button" : undefined}
+      className={`rounded-xl shadow-lg border overflow-hidden transition-all hover:shadow-xl ${className}`}
+      style={{
+        background: "rgba(255,255,255,0.05)",
+        borderColor: "rgba(255,255,255,0.1)",
+        backdropFilter: "blur(6px)",
+      }}
     >
       {title && (
-        <div className="px-5 py-3 border-b border-[var(--app-card-border)]">
-          <h3 className="text-lg font-medium text-[var(--app-foreground)]">
-            {title}
-          </h3>
+        <div className="px-5 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+          <h3 className="text-lg font-medium text-white">{title}</h3>
         </div>
       )}
       <div className="p-5">{children}</div>
@@ -99,36 +85,7 @@ function Card({
   );
 }
 
-type FeaturesProps = {
-  setActiveTab: (tab: string) => void;
-};
-
-export function Features({ setActiveTab }: FeaturesProps) {
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <Card title="Key Features">
-        <ul className="space-y-3 mb-4">
-          <li className="flex items-start">
-            <span className="text-[var(--app-foreground-muted)]">Minimalistic and beautiful UI design</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-[var(--app-foreground-muted)]">Responsive layout for all devices</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-[var(--app-foreground-muted)]">Dark mode support</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-[var(--app-foreground-muted)]">OnchainKit integration</span>
-          </li>
-        </ul>
-        <Button variant="outline" onClick={() => setActiveTab("home")}>
-          Back to Home
-        </Button>
-      </Card>
-    </div>
-  );
-}
-
+// Public Home component used by app/page.tsx
 export function Home() {
   return (
     <div className="space-y-6 animate-fade-in">
@@ -137,11 +94,7 @@ export function Home() {
   );
 }
 
-// Removed Icon component as it's no longer used
-
-// Removed TodoList since the app is focused on donations
-
-
+// DonateCard implements the tipping flow
 function DonateCard() {
   const defaultRecipient = process.env.NEXT_PUBLIC_DONATION_RECIPIENT || "";
   const testnet = (process.env.NEXT_PUBLIC_BASEPAY_TESTNET || "false") === "true";
@@ -149,13 +102,16 @@ function DonateCard() {
   const [selectedAmount, setSelectedAmount] = useState<number>(3);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(defaultRecipient);
-  const emailOptional = true;
   const [status, setStatus] = useState<"idle" | "paying" | "checking" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
 
   const isValidAddress = (address: string): boolean =>
     Boolean(address) && address.length === 42 && address.startsWith("0x");
+
+  const currentAmount = customAmount ? Number.parseFloat(customAmount) : selectedAmount;
+  const isAmountValid = Number.isFinite(currentAmount) && currentAmount > 0;
+  const isRecipientValid = isValidAddress(recipient);
 
   const copyAddress = async () => {
     try {
@@ -172,14 +128,13 @@ function DonateCard() {
     setMessage("");
 
     try {
-      const currentAmount = customAmount ? Number.parseFloat(customAmount) : selectedAmount;
       const parsed = Number.parseFloat(String(currentAmount));
       if (Number.isNaN(parsed) || parsed <= 0) {
         throw new Error("Enter a valid amount in USD");
       }
       const normalizedAmount = parsed.toFixed(2);
 
-      if (!isValidAddress(recipient)) {
+      if (!isRecipientValid) {
         throw new Error("Enter a valid recipient address");
       }
 
@@ -187,13 +142,10 @@ function DonateCard() {
         amount: normalizedAmount,
         to: recipient as `0x${string}`,
         testnet,
-        payerInfo: {
-          requests: [{ type: "email", optional: emailOptional }],
-        },
+        payerInfo: { requests: [{ type: "email", optional: true }] },
       });
 
       setStatus("checking");
-
       const result = await getPaymentStatus({ id: payment.id, testnet });
 
       if (result.status === "completed") {
@@ -208,22 +160,19 @@ function DonateCard() {
       const e = err as Error;
       setMessage(e?.message || "Payment failed");
     }
-  }, [recipient, selectedAmount, customAmount, testnet, emailOptional]);
+  }, [currentAmount, isRecipientValid, recipient, testnet]);
 
   return (
-    <div className="min-h-[70vh] p-2 sm:p-4">
+    <div className="min-h-[70vh] p-4" style={{ backgroundColor: "#0a0b2b" }}>
       <div className="mx-auto max-w-md w-full">
-        <div className="mb-5 sm:mb-6 text-center">
-          <h1 className="mb-2 text-xl sm:text-2xl font-bold text-white leading-tight">Buy a coffee</h1>
-          <p className="text-sm sm:text-base text-[var(--app-foreground-muted)] px-2">
-            Support your favorite creator with a small USDC tip on Base
-          </p>
+        <div className="mb-6 text-center">
+          <h1 className="mb-2 text-2xl font-bold text-white leading-tight">Buy a coffee</h1>
+          <p className="text-sm text-gray-300">Support your favorite creator with a small USDC tip on Base</p>
         </div>
 
-        <Card title="Choose Amount" className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)]">
+        <Card title="Choose Amount">
           <div className="space-y-5">
-            {/* Preset amounts */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {[1, 3, 5].map((amt) => {
                 const active = !customAmount && selectedAmount === amt;
                 return (
@@ -234,7 +183,7 @@ function DonateCard() {
                       setSelectedAmount(amt);
                       setCustomAmount("");
                     }}
-                    className={`h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0052FF] ${
+                    className={`h-12 text-lg font-semibold rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0052FF] ${
                       active
                         ? "bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
                         : "bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] text-gray-200 border border-[rgba(255,255,255,0.15)]"
@@ -247,11 +196,12 @@ function DonateCard() {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-xs text-[var(--app-foreground-muted)]">Amount (USD)</label>
+              <label className="block text-xs text-gray-300">Or enter custom amount (USD)</label>
               <div className="relative w-full max-w-xs">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--app-foreground-muted)] text-base">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">$</span>
                 <input
                   type="number"
+                  inputMode="decimal"
                   min="0.01"
                   step="0.01"
                   placeholder="0.00"
@@ -260,60 +210,71 @@ function DonateCard() {
                     setCustomAmount(e.target.value);
                     setSelectedAmount(0);
                   }}
-                  className="pl-7 w-full max-w-xs px-3 py-2 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)]"
+                  className={`pl-7 w-full max-w-xs px-3 py-3 rounded-lg text-white placeholder:text-gray-400 outline-none transition-all bg-[rgba(255,255,255,0.06)] border ${
+                    customAmount
+                      ? "border-blue-500 ring-1 ring-blue-500/20"
+                      : "border-[rgba(255,255,255,0.15)]"
+                  }`}
                 />
               </div>
+              {customAmount && (
+                <p className="text-xs text-gray-400">
+                  Custom amount: ${Number.parseFloat(customAmount || "0").toFixed(2)} USDC
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <label className="block text-xs text-[var(--app-foreground-muted)]">Recipient Address (Base)</label>
+              <label className="block text-xs text-gray-300">Recipient Address (Base)</label>
               <input
                 type="text"
                 placeholder="Enter creator's wallet address (0x...)"
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
-                className="w-full px-3 py-2 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] font-mono text-sm"
+                className={`w-full px-3 py-3 rounded-lg font-mono text-sm text-white placeholder:text-gray-400 outline-none transition-all bg-[rgba(255,255,255,0.06)] border ${
+                  recipient
+                    ? isRecipientValid
+                      ? "border-green-500 ring-1 ring-green-500/20"
+                      : "border-red-500 ring-1 ring-red-500/20"
+                    : "border-[rgba(255,255,255,0.15)]"
+                }`}
               />
               {recipient && (
                 <div className="flex items-center justify-between">
-                  {isValidAddress(recipient) ? (
+                  {isRecipientValid ? (
                     <p className="text-xs text-green-400">Valid Base address</p>
                   ) : (
                     <p className="text-xs text-red-400">Please enter a valid address (starts with 0x, 42 chars)</p>
                   )}
-                  {isValidAddress(recipient) && (
-              <button
-                type="button"
+                  {isRecipientValid && (
+                    <button
+                      type="button"
                       onClick={copyAddress}
-                      className="h-6 px-2 text-xs rounded-md border border-[var(--app-card-border)] text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-              >
+                      className="h-6 px-2 text-xs rounded-md border border-[rgba(255,255,255,0.15)] text-gray-300 hover:text-white hover:bg-[rgba(255,255,255,0.08)]"
+                    >
                       {copied ? "Copied" : "Copy"}
-              </button>
+                    </button>
                   )}
                 </div>
               )}
             </div>
-      </div>
-    </Card>
+          </div>
+        </Card>
 
-        {(customAmount ? Number.parseFloat(customAmount || "0") : selectedAmount) > 0 && (
-          <div className="mt-4 sm:mt-5 border border-blue-500/30 bg-blue-500/10 rounded-lg p-4">
+        {(isAmountValid && currentAmount > 0) && (
+          <div className="mt-5 border rounded-lg p-4" style={{ borderColor: "rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.1)" }}>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-[var(--app-foreground-muted)]">Total Amount:</span>
-              <span className="text-lg sm:text-xl font-bold text-white">${(customAmount ? Number.parseFloat(customAmount || "0") : selectedAmount).toFixed(2)} USDC</span>
+              <span className="text-sm text-gray-300">Total Amount:</span>
+              <span className="text-lg font-bold text-white">${currentAmount.toFixed(2)} USDC</span>
             </div>
           </div>
         )}
 
-        <div className="mt-4 sm:mt-5 w-full">
-          <BasePayButtonOfficial
-            theme="dark"
+        <div className="mt-5 w-full">
+          <BrandedBasePayButton
+            colorScheme="dark"
             onClick={handlePayment}
-            disabled={
-              !(customAmount ? Number.parseFloat(customAmount || "0") > 0 : selectedAmount > 0) ||
-              !isValidAddress(recipient)
-            }
-            loading={status === "paying" || status === "checking"}
+            disabled={!isAmountValid || !isRecipientValid || status === "paying" || status === "checking"}
           />
         </div>
 
@@ -325,7 +286,7 @@ function DonateCard() {
                   ? "text-green-500"
                   : status === "error"
                   ? "text-red-500"
-                  : "text-[var(--app-foreground-muted)]"
+                  : "text-gray-300"
               }
             >
               {status === "paying" && "Waiting for wallet confirmation..."}
@@ -335,11 +296,11 @@ function DonateCard() {
           </div>
         )}
 
-        <div className="mt-5 space-y-3">
-          <div className="flex items-center gap-3 rounded-lg bg-[color:rgba(255,255,255,0.06)] border border-[color:rgba(255,255,255,0.15)] p-3">
+        <div className="mt-6 space-y-3">
+          <div className="flex items-center gap-3 rounded-lg p-3" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)" }}>
             <div>
               <p className="text-sm font-medium text-white">Secure Payment</p>
-              <p className="text-xs text-[var(--app-foreground-muted)]">Payments use USDC on Base Mainnet</p>
+              <p className="text-xs text-gray-300">Payments use USDC on Base Mainnet</p>
             </div>
           </div>
         </div>
@@ -347,6 +308,3 @@ function DonateCard() {
     </div>
   );
 }
-
-
-// Removed TransactionCard as it's not part of the donation flow
