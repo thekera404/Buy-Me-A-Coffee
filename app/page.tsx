@@ -16,7 +16,7 @@ export default function App() {
   }, [setFrameReady, isFrameReady]);
 
   return (
-    <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
+    <div className="flex flex-col min-h-screen font-sans text-white" style={{ backgroundColor: "#0a0b2b" }}>
       <div className="w-full max-w-md mx-auto px-4 py-3">
         <main className="flex-1">
           <Home />
@@ -26,7 +26,7 @@ export default function App() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-[var(--ock-text-foreground-muted)] text-xs"
+            className="text-gray-400 text-xs hover:text-white"
             onClick={() => openUrl("https://base.org/builders/minikit")}
           >
             Built on Base with MiniKit

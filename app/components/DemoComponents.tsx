@@ -3,6 +3,8 @@
 import { useCallback, useState } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
 import { BasePayButton } from "./base-pay-button";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 // Reusable Button
 type ButtonProps = {
@@ -163,7 +165,7 @@ function DonateCard() {
   }, [currentAmount, isRecipientValid, recipient, testnet]);
 
   return (
-    <div className="min-h-[70vh] p-4" style={{ backgroundColor: "#0a0b2b" }}>
+    <div className="min-h-[70vh] p-4">
       <div className="mx-auto max-w-md w-full">
         <div className="mb-6 text-center">
           <h1 className="mb-2 text-2xl font-bold text-white leading-tight">Buy a coffee</h1>
@@ -279,20 +281,41 @@ function DonateCard() {
         </div>
 
         {status !== "idle" && (
-          <div className="mt-3 text-sm">
-            <span
-              className={
-                status === "success"
-                  ? "text-green-500"
-                  : status === "error"
-                  ? "text-red-500"
-                  : "text-gray-300"
-              }
-            >
-              {status === "paying" && "Waiting for wallet confirmation..."}
-              {status === "checking" && "Checking payment status..."}
-              {(status === "success" || status === "error") && message}
-            </span>
+          <div className="mt-4">
+            {status === "success" && (
+              <Alert className="border-green-500/30 bg-green-500/10 text-green-400">
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>Payment Successful!</AlertTitle>
+                <AlertDescription className="text-green-300">
+                  {message}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {status === "error" && (
+              <Alert variant="destructive" className="border-red-500/30 bg-red-500/10 text-red-400">
+                <XCircle className="h-4 w-4" />
+                <AlertTitle>Payment Failed</AlertTitle>
+                <AlertDescription className="text-red-300">
+                  {message || "Transaction was rejected or failed to process. Please try again."}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {(status === "paying" || status === "checking") && (
+              <Alert className="border-blue-500/30 bg-blue-500/10 text-blue-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertTitle>
+                  {status === "paying" ? "Processing Payment" : "Verifying Transaction"}
+                </AlertTitle>
+                <AlertDescription className="text-blue-300">
+                  {status === "paying" 
+                    ? "Waiting for wallet confirmation..." 
+                    : "Checking payment status..."
+                  }
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         )}
 
