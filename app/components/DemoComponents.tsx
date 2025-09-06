@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
 import { BasePayButton } from "./base-pay-button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Shield } from "lucide-react";
 
 // Reusable Button
 type ButtonProps = {
@@ -319,8 +319,9 @@ function DonateCard() {
           </div>
         )}
 
-        <div className="mt-6 space-y-3">
-          <div className="flex items-center gap-3 rounded-lg p-3" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)" }}>
+        <div className="mt-5 sm:mt-6 space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-3 rounded-lg bg-gray-800/50 border border-gray-700 p-3">  
+            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 shrink-0" />
             <div>
               <p className="text-sm font-medium text-white">Secure Payment</p>
               <p className="text-xs text-gray-300">Payments use USDC on Base Mainnet</p>
