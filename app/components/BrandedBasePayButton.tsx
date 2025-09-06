@@ -31,6 +31,7 @@ export function BrandedBasePayButton({ colorScheme = "light", disabled = false, 
         transition: "all 0.2s ease",
       }}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={
           isLight

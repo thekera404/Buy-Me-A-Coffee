@@ -2,7 +2,7 @@
 
 import { type ReactNode, useCallback, useState } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
-import { BasePayButton } from "@base-org/account-ui/react";
+// Removed unused BasePayButton import in favor of local branded button
 import { BrandedBasePayButton } from "./BrandedBasePayButton";
 
 type ButtonProps = {
@@ -148,7 +148,7 @@ function DonateCard() {
 
   const [amount, setAmount] = useState<string>("1.00");
   const [recipient, setRecipient] = useState<string>(defaultRecipient);
-  const [emailOptional, setEmailOptional] = useState<boolean>(true);
+  const emailOptional = true;
   const [status, setStatus] = useState<"idle" | "paying" | "checking" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
