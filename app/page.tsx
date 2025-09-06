@@ -1,13 +1,11 @@
 "use client";
 
-import { useMiniKit, useOpenUrl } from "@coinbase/onchainkit/minikit";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useEffect } from "react";
-import { Button } from "./components/DemoComponents";
 import { Home } from "./components/DemoComponents";
 
 export default function App() {
   const { setFrameReady, isFrameReady } = useMiniKit();
-  const openUrl = useOpenUrl();
 
   useEffect(() => {
     if (!isFrameReady) {
