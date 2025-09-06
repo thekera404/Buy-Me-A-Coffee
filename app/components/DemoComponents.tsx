@@ -3,6 +3,7 @@
 import { type ReactNode, useCallback, useState } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
 import { BasePayButton } from "@base-org/account-ui/react";
+import { BrandedBasePayButton } from "./BrandedBasePayButton";
 
 type ButtonProps = {
   children: ReactNode;
@@ -146,36 +147,46 @@ function DonateCard() {
   const testnet = (process.env.NEXT_PUBLIC_BASEPAY_TESTNET || "false") === "true";
 
   const [amount, setAmount] = useState<string>("1.00");
-  const [customAmount, setCustomAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(defaultRecipient);
   const [emailOptional, setEmailOptional] = useState<boolean>(true);
   const [status, setStatus] = useState<"idle" | "paying" | "checking" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
+  const [copied, setCopied] = useState<boolean>(false);
 
-  const handleSelectAmount = (value: string) => {
-    setAmount(value);
-    setCustomAmount("");
+  const isValidAddress = (address: string): boolean =>
+    Boolean(address) && address.length === 42 && address.startsWith("0x");
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(recipient);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* noop */
+    }
   };
-
-  const resolvedAmount = customAmount.trim() !== "" ? Number.parseFloat(customAmount).toFixed(2) : amount;
 
   const handlePayment = useCallback(async () => {
     setStatus("paying");
     setMessage("");
 
     try {
-      if (!recipient || !recipient.startsWith("0x") || recipient.length !== 42) {
+      const parsed = Number.parseFloat(amount);
+      if (Number.isNaN(parsed) || parsed <= 0) {
+        throw new Error("Enter a valid amount in USD");
+      }
+      const normalizedAmount = parsed.toFixed(2);
+
+      if (!isValidAddress(recipient)) {
         throw new Error("Enter a valid recipient address");
       }
 
       const payment = await pay({
-        amount: resolvedAmount,
+        amount: normalizedAmount,
         to: recipient as `0x${string}`,
         testnet,
         payerInfo: {
-          requests: [
-            { type: "email", optional: emailOptional },
-          ],
+          requests: [{ type: "email", optional: emailOptional }],
         },
       });
 
@@ -195,84 +206,91 @@ function DonateCard() {
       const e = err as Error;
       setMessage(e?.message || "Payment failed");
     }
-  }, [recipient, resolvedAmount, testnet, emailOptional]);
+  }, [recipient, amount, testnet, emailOptional]);
 
   return (
-    <Card title="Buy the developer a coffee">
-      <div className="space-y-4">
-        <p className="text-[var(--app-foreground-muted)]">
-          Support this developer with a small USDC tip on Base.
-        </p>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant={amount === "1.00" && customAmount === "" ? "primary" : "secondary"}
-            size="sm"
-            onClick={() => handleSelectAmount("1.00")}
-          >
-            $1
-          </Button>
-          <Button
-            variant={amount === "3.00" && customAmount === "" ? "primary" : "secondary"}
-            size="sm"
-            onClick={() => handleSelectAmount("3.00")}
-          >
-            $3
-          </Button>
-          <Button
-            variant={amount === "5.00" && customAmount === "" ? "primary" : "secondary"}
-            size="sm"
-            onClick={() => handleSelectAmount("5.00")}
-          >
-            $5
-          </Button>
-          <input
-            type="number"
-            min="1"
-            step="0.5"
-            placeholder="Custom"
-            value={customAmount}
-            onChange={(e) => setCustomAmount(e.target.value)}
-            className="w-24 px-2 py-1 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-md text-[var(--app-foreground)]"
-          />
+    <div className="min-h-[70vh] p-2 sm:p-4">
+      <div className="mx-auto max-w-md w-full">
+        <div className="mb-5 sm:mb-6 text-center">
+          <h1 className="mb-2 text-xl sm:text-2xl font-bold text-white leading-tight">Buy a coffee</h1>
+          <p className="text-sm sm:text-base text-[var(--app-foreground-muted)] px-2">
+            Support your favorite creator with a small USDC tip on Base
+          </p>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-xs text-[var(--app-foreground-muted)]">Recipient Address (Base)</label>
-          <input
-            type="text"
-            placeholder="0xRecipient"
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            className="w-full px-3 py-2 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)]"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            id="emailOptional"
-            type="checkbox"
-            checked={emailOptional}
-            onChange={(e) => setEmailOptional(e.target.checked)}
-          />
-          <label htmlFor="emailOptional" className="text-sm text-[var(--app-foreground-muted)]">
-            Email is optional at checkout
-                </label>
+        <Card title="Choose Amount">
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-xs text-[var(--app-foreground-muted)]">Amount (USD)</label>
+              <div className="relative w-full max-w-xs">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--app-foreground-muted)] text-base">$</span>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="pl-7 w-full max-w-xs px-3 py-2 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)]"
+                />
               </div>
+            </div>
 
-        <div className="flex items-center justify-start">
-          <BasePayButton colorScheme="light" onClick={handlePayment} />
+            <div className="space-y-2">
+              <label className="block text-xs text-[var(--app-foreground-muted)]">Recipient Address (Base)</label>
+              <input
+                type="text"
+                placeholder="Enter creator's wallet address (0x...)"
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+                className="w-full px-3 py-2 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] font-mono text-sm"
+              />
+              {recipient && (
+                <div className="flex items-center justify-between">
+                  {isValidAddress(recipient) ? (
+                    <p className="text-xs text-green-400">Valid Base address</p>
+                  ) : (
+                    <p className="text-xs text-red-400">Please enter a valid address (starts with 0x, 42 chars)</p>
+                  )}
+                  {isValidAddress(recipient) && (
+              <button
+                type="button"
+                      onClick={copyAddress}
+                      className="h-6 px-2 text-xs rounded-md border border-[var(--app-card-border)] text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
+              >
+                      {copied ? "Copied" : "Copy"}
+              </button>
+                  )}
+                </div>
+              )}
+            </div>
+      </div>
+    </Card>
+
+        {Number.parseFloat(amount || "0") > 0 && (
+          <div className="mt-4 sm:mt-5 border border-blue-500/30 bg-blue-500/10 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-[var(--app-foreground-muted)]">Total Amount:</span>
+              <span className="text-lg sm:text-xl font-bold text-white">${Number.parseFloat(amount || "0").toFixed(2)} USDC</span>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 sm:mt-5 w-full">
+          <BrandedBasePayButton colorScheme="dark" onClick={handlePayment} />
         </div>
 
         {status !== "idle" && (
-          <div className="text-sm">
-            <span className={
-              status === "success"
-                ? "text-green-500"
-                : status === "error"
-                ? "text-red-500"
-                : "text-[var(--app-foreground-muted)]"
-            }>
+          <div className="mt-3 text-sm">
+            <span
+              className={
+                status === "success"
+                  ? "text-green-500"
+                  : status === "error"
+                  ? "text-red-500"
+                  : "text-[var(--app-foreground-muted)]"
+              }
+            >
               {status === "paying" && "Waiting for wallet confirmation..."}
               {status === "checking" && "Checking payment status..."}
               {(status === "success" || status === "error") && message}
@@ -280,9 +298,16 @@ function DonateCard() {
           </div>
         )}
 
-        <p className="text-[var(--app-foreground-muted)] text-xs">Payments use USDC on Base Mainnet.</p>
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center gap-3 rounded-lg bg-[color:rgba(255,255,255,0.06)] border border-[color:rgba(255,255,255,0.15)] p-3">
+            <div>
+              <p className="text-sm font-medium text-white">Secure Payment</p>
+              <p className="text-xs text-[var(--app-foreground-muted)]">Payments use USDC on Base Mainnet</p>
+            </div>
+          </div>
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
