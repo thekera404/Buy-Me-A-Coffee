@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
 import { BasePayButton as BrandedBasePayButton } from "./BrandedBasePayButton";
+import { BasePayButton } from "./base-pay-button";
 
 // Reusable Button
 type ButtonProps = {
@@ -271,7 +272,7 @@ function DonateCard() {
         )}
 
         <div className="mt-5 w-full">
-          <BrandedBasePayButton
+          <BasePayButton
             colorScheme="dark"
             onClick={handlePayment}
             disabled={!isAmountValid || !isRecipientValid || status === "paying" || status === "checking"}
