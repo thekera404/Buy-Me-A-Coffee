@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { pay, getPaymentStatus } from "@base-org/account";
 import { BasePayButton } from "./base-pay-button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
@@ -99,7 +98,6 @@ export function Home() {
 
 // DonateCard implements the tipping flow
 function DonateCard() {
-  const { isFrameReady } = useMiniKit();
   const defaultRecipient = process.env.NEXT_PUBLIC_DONATION_RECIPIENT || "";
   const testnet = (process.env.NEXT_PUBLIC_BASEPAY_TESTNET || "false") === "true";
 
@@ -129,12 +127,6 @@ function DonateCard() {
   };
 
   const handlePayment = useCallback(async () => {
-    if (!isFrameReady) {
-      setStatus("error");
-      setMessage("MiniKit not ready. Please try again.");
-      return;
-    }
-
     setStatus("paying");
     setMessage("");
 
@@ -172,7 +164,7 @@ function DonateCard() {
       const e = err as Error;
       setMessage(e?.message || "Payment failed");
     }
-  }, [currentAmount, isRecipientValid, recipient, testnet, isFrameReady]);
+  }, [currentAmount, isRecipientValid, recipient, testnet]);
 
   return (
     <div className="min-h-[70vh] p-4">
@@ -291,16 +283,8 @@ function DonateCard() {
           <BasePayButton
             colorScheme="dark"
             onClick={handlePayment}
-            disabled={!isAmountValid || !isRecipientValid || status === "paying" || status === "checking" || !isFrameReady}
+            disabled={!isAmountValid || !isRecipientValid || status === "paying" || status === "checking"}
           />
-          {!isFrameReady && (
-            <div className="mt-2 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-xs text-gray-400">Initializing MiniKit...</p>
-              </div>
-            </div>
-          )}
         </div>
 
         {status !== "idle" && (

@@ -1,25 +1,8 @@
 "use client";
 
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import { useEffect } from "react";
 import { Home } from "./components/DemoComponents";
 
 export default function App() {
-  const { setFrameReady, isFrameReady } = useMiniKit();
-
-  useEffect(() => {
-    // Add a small delay to ensure the iframe context is ready
-    const initializeMiniKit = async () => {
-      // Wait a bit for the iframe to be fully loaded
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      if (!isFrameReady) {
-        setFrameReady();
-      }
-    };
-    
-    initializeMiniKit();
-  }, [setFrameReady, isFrameReady]);
 
   return (
     <div className="flex flex-col min-h-screen font-sans text-white" style={{ backgroundColor: "#0a0b2b" }}>
