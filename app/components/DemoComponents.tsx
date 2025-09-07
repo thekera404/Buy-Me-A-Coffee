@@ -1,10 +1,21 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { pay, getPaymentStatus } from "@base-org/account";
+import { useCallback, useState, useEffect } from "react";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
+import { sdk } from "@farcaster/frame-sdk";
 import { BasePayButton } from "./base-pay-button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { CheckCircle, XCircle, Loader2, Shield } from "lucide-react";
+
+// Helper function to encode ERC-20 transfer data
+function encodeTransferData(to: string, amount: bigint): string {
+  // Remove 0x prefix from address and pad to 32 bytes
+  const addressHex = to.slice(2).toLowerCase().padStart(64, '0');
+  // Convert amount to hex and pad to 32 bytes
+  const amountHex = amount.toString(16).padStart(64, '0');
+  // ERC-20 transfer function selector (0xa9059cbb) + address + amount
+  return `0xa9059cbb${addressHex}${amountHex}`;
+}
 
 // Reusable Button
 type ButtonProps = {
@@ -98,6 +109,8 @@ export function Home() {
 
 // DonateCard implements the tipping flow
 function DonateCard() {
+  const miniKit = useMiniKit();
+  const { isFrameReady } = miniKit;
   const defaultRecipient = process.env.NEXT_PUBLIC_DONATION_RECIPIENT || "";
   const testnet = (process.env.NEXT_PUBLIC_BASEPAY_TESTNET || "false") === "true";
 
@@ -108,6 +121,21 @@ function DonateCard() {
   const [message, setMessage] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
   const [txCopied, setTxCopied] = useState<boolean>(false);
+  const [sdkReady, setSdkReady] = useState<boolean>(false);
+
+  // Initialize Farcaster SDK
+  useEffect(() => {
+    const initSdk = async () => {
+      try {
+        await sdk.actions.ready();
+        setSdkReady(true);
+      } catch (error) {
+        console.error("Failed to initialize Farcaster SDK:", error);
+      }
+    };
+    
+    initSdk();
+  }, []);
 
   const isValidAddress = (address: string): boolean =>
     Boolean(address) && address.length === 42 && address.startsWith("0x");
@@ -127,6 +155,12 @@ function DonateCard() {
   };
 
   const handlePayment = useCallback(async () => {
+    if (!isFrameReady || !sdkReady) {
+      setStatus("error");
+      setMessage("App not ready. Please try again.");
+      return;
+    }
+
     setStatus("paying");
     setMessage("");
 
@@ -135,35 +169,51 @@ function DonateCard() {
       if (Number.isNaN(parsed) || parsed <= 0) {
         throw new Error("Enter a valid amount in USD");
       }
-      const normalizedAmount = parsed.toFixed(2);
 
       if (!isRecipientValid) {
         throw new Error("Enter a valid recipient address");
       }
 
-      const payment = await pay({
-        amount: normalizedAmount,
-        to: recipient as `0x${string}`,
-        testnet,
-        payerInfo: { requests: [{ type: "email", optional: true }] },
+      // Convert USD to USDC (assuming 1:1 for simplicity)
+      // In production, you'd want to get the actual exchange rate
+      const usdcAmount = parsed;
+      
+      // USDC has 6 decimals
+      const amountInWei = BigInt(Math.floor(usdcAmount * 1000000));
+
+      // USDC contract address on Base
+      const usdcContractAddress = testnet 
+        ? "0x036CbD53842c5426634e7929541eC2318f3dCF7e" // Base Sepolia USDC
+        : "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // Base Mainnet USDC
+
+      // Encode the ERC-20 transfer data
+      const transferData = encodeTransferData(recipient, amountInWei);
+
+      const transaction = {
+        to: usdcContractAddress as `0x${string}`,
+        data: transferData as `0x${string}`,
+        value: "0x0" as `0x${string}`, // No ETH value for ERC-20 transfer
+      };
+
+      // Use Farcaster Frame SDK to send transaction
+      const result = await sdk.wallet.ethProvider.request({
+        method: 'eth_sendTransaction',
+        params: [transaction],
       });
-
-      setStatus("checking");
-      const result = await getPaymentStatus({ id: payment.id, testnet });
-
-      if (result.status === "completed") {
+      
+      if (result) {
         setStatus("success");
-        setMessage(payment.id);
+        setMessage(result);
       } else {
         setStatus("error");
-        setMessage("Payment not completed yet. Please check later.");
+        setMessage("Transaction failed. Please try again.");
       }
     } catch (err) {
       setStatus("error");
       const e = err as Error;
       setMessage(e?.message || "Payment failed");
     }
-  }, [currentAmount, isRecipientValid, recipient, testnet]);
+  }, [currentAmount, isRecipientValid, recipient, testnet, isFrameReady, sdkReady]);
 
   return (
     <div className="min-h-[70vh] p-4">
@@ -171,6 +221,11 @@ function DonateCard() {
         <div className="mb-6 text-center">
           <h1 className="mb-2 text-2xl font-bold text-white leading-tight">Buy a coffee</h1>
           <p className="text-sm text-gray-300">Support your favorite creator with a small USDC tip on Base</p>
+          {testnet && (
+            <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+              🧪 Testnet Mode - Base Sepolia
+            </div>
+          )}
         </div>
 
         <Card title="Choose Amount">
@@ -277,8 +332,13 @@ function DonateCard() {
           <BasePayButton
             colorScheme="dark"
             onClick={handlePayment}
-            disabled={!isAmountValid || !isRecipientValid || status === "paying" || status === "checking"}
+            disabled={!isAmountValid || !isRecipientValid || status === "paying" || status === "checking" || !isFrameReady || !sdkReady}
           />
+          {(!isFrameReady || !sdkReady) && (
+            <p className="text-xs text-gray-400 mt-2 text-center">
+              {!isFrameReady ? "Initializing MiniKit..." : "Initializing Farcaster SDK..."}
+            </p>
+          )}
         </div>
 
         {status !== "idle" && (
@@ -355,7 +415,9 @@ function DonateCard() {
             <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 shrink-0" />
             <div>
               <p className="text-sm font-medium text-white">Secure Payment</p>
-              <p className="text-xs text-gray-300">Payments use USDC on Base Mainnet</p>
+              <p className="text-xs text-gray-300">
+                Payments use USDC on {testnet ? "Base Sepolia (Testnet)" : "Base Mainnet"}
+              </p>
             </div>
           </div>
         </div>

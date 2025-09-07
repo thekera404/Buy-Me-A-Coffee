@@ -56,6 +56,10 @@ NEXT_PUBLIC_APP_OG_IMAGE=
 # Redis config
 REDIS_URL=
 REDIS_TOKEN=
+
+# Buy Me a Coffee specific variables
+NEXT_PUBLIC_DONATION_RECIPIENT=0x... # Default recipient wallet address
+NEXT_PUBLIC_BASEPAY_TESTNET=false # Set to "true" for Base Sepolia testnet
 ```
 
 3. Start the development server:
