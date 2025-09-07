@@ -8,9 +8,17 @@ export default function App() {
   const { setFrameReady, isFrameReady } = useMiniKit();
 
   useEffect(() => {
-    if (!isFrameReady) {
-      setFrameReady();
-    }
+    // Add a small delay to ensure the iframe context is ready
+    const initializeMiniKit = async () => {
+      // Wait a bit for the iframe to be fully loaded
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!isFrameReady) {
+        setFrameReady();
+      }
+    };
+    
+    initializeMiniKit();
   }, [setFrameReady, isFrameReady]);
 
   return (
