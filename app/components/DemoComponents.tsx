@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { pay, getPaymentStatus } from "@base-org/account";
 import { BasePayButton } from "./base-pay-button";
