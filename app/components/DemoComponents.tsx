@@ -107,6 +107,7 @@ function DonateCard() {
   const [status, setStatus] = useState<"idle" | "paying" | "checking" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
+  const [txCopied, setTxCopied] = useState<boolean>(false);
 
   const isValidAddress = (address: string): boolean =>
     Boolean(address) && address.length === 42 && address.startsWith("0x");
@@ -152,7 +153,7 @@ function DonateCard() {
 
       if (result.status === "completed") {
         setStatus("success");
-        setMessage(`Thank you! Payment settled. Tx: ${payment.id}`);
+        setMessage(payment.id);
       } else {
         setStatus("error");
         setMessage("Payment not completed yet. Please check later.");
@@ -286,8 +287,38 @@ function DonateCard() {
               <Alert className="border-green-500/30 bg-green-500/10 text-green-400">
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Payment Successful!</AlertTitle>
-                <AlertDescription className="text-green-300">
-                  {message}
+                <AlertDescription className="text-green-300 space-y-2">
+                  <p>Thank you! Your payment has been settled successfully.</p>
+                  {message && (
+                    <div className="flex items-center justify-between gap-2 p-2 bg-green-500/5 rounded border border-green-500/20">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-green-400 mb-1">Transaction ID:</p>
+                        <p className="text-xs font-mono text-green-300 break-all sm:break-normal">
+                          <span className="sm:hidden">
+                            {message.length > 16 ? `${message.slice(0, 8)}...${message.slice(-6)}` : message}
+                          </span>
+                          <span className="hidden sm:inline">
+                            {message.length > 32 ? `${message.slice(0, 16)}...${message.slice(-12)}` : message}
+                          </span>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(message);
+                            setTxCopied(true);
+                            setTimeout(() => setTxCopied(false), 2000);
+                          } catch {
+                            // Fallback for older browsers
+                          }
+                        }}
+                        className="shrink-0 px-2 py-1 text-xs rounded border border-green-500/30 text-green-300 hover:text-green-200 hover:bg-green-500/10 transition-colors"
+                      >
+                        {txCopied ? "Copied!" : "Copy"}
+                      </button>
+                    </div>
+                  )}
                 </AlertDescription>
               </Alert>
             )}
