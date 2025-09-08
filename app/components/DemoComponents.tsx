@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { pay, getPaymentStatus } from "@base-org/account";
 import { BasePayButton } from "./base-pay-button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { CheckCircle, XCircle, Loader2, Shield } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Shield, Wallet } from "lucide-react";
 import { ethers } from "ethers";
 
 // Type for ethereum provider
@@ -117,23 +117,46 @@ function DonateCard() {
   const [message, setMessage] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
   const [txCopied, setTxCopied] = useState<boolean>(false);
+  const [isConnectingWallet, setIsConnectingWallet] = useState<boolean>(false);
+  const [lastPaymentAttempt, setLastPaymentAttempt] = useState<number>(0);
 
-  const isValidAddress = (address: string): boolean =>
-    Boolean(address) && address.length === 42 && address.startsWith("0x");
+  const isValidAddress = useCallback((address: string): boolean => {
+    return Boolean(address) && address.length === 42 && address.startsWith("0x") && ethers.isAddress(address);
+  }, []);
 
-  // Calculate current amount based on currency and selection
-  const getEthAmount = (usdAmount: number) => {
+  // FIXED: Memoized ETH amount calculation
+  const getEthAmount = useCallback((usdAmount: number) => {
     const ethAmounts = { 1: 0.0001, 3: 0.001, 5: 0.01 };
     return ethAmounts[usdAmount as keyof typeof ethAmounts] || usdAmount;
-  };
+  }, []);
   
-  const currentAmount = customAmount 
-    ? Number.parseFloat(customAmount) 
-    : currency === "ETH" 
-      ? getEthAmount(selectedAmount)
-      : selectedAmount;
-  const isAmountValid = Number.isFinite(currentAmount) && currentAmount > 0;
-  const isRecipientValid = isValidAddress(recipient);
+  // FIXED: Improved amount calculation with proper validation
+  const currentAmount = useMemo(() => {
+    return customAmount 
+      ? Number.parseFloat(customAmount) 
+      : currency === "ETH" 
+        ? getEthAmount(selectedAmount)
+        : selectedAmount;
+  }, [customAmount, currency, selectedAmount, getEthAmount]);
+
+  // FIXED: Enhanced amount validation with reasonable limits
+  const isAmountValid = useMemo(() => {
+    if (!Number.isFinite(currentAmount) || currentAmount <= 0) return false;
+    
+    // Add reasonable limits for ETH (0.0001 to 10 ETH)
+    if (currency === "ETH" && (currentAmount < 0.0001 || currentAmount > 10)) {
+      return false;
+    }
+    
+    // Add reasonable limits for USDC (0.01 to 10000 USD)
+    if (currency === "USDC" && (currentAmount < 0.01 || currentAmount > 10000)) {
+      return false;
+    }
+    
+    return true;
+  }, [currentAmount, currency]);
+
+  const isRecipientValid = useMemo(() => isValidAddress(recipient), [recipient, isValidAddress]);
 
   const copyAddress = async () => {
     try {
@@ -146,6 +169,15 @@ function DonateCard() {
   };
 
   const handlePayment = useCallback(async () => {
+    // Rate limiting: prevent spam payments
+    const now = Date.now();
+    if (now - lastPaymentAttempt < 2000) { // 2 second cooldown
+      setStatus("error");
+      setMessage("Please wait before attempting another payment.");
+      return;
+    }
+    setLastPaymentAttempt(now);
+
     setStatus("paying");
     setMessage("");
 
@@ -160,6 +192,8 @@ function DonateCard() {
       }
 
       if (currency === "ETH") {
+        setIsConnectingWallet(true);
+        
         // Handle ETH payments using direct wallet interaction
         const ethereum = (window as { ethereum?: EthereumProvider }).ethereum;
         if (!ethereum) {
@@ -167,22 +201,49 @@ function DonateCard() {
         }
 
         const provider = new ethers.BrowserProvider(ethereum);
+        
+        // SECURITY FIX: Verify we're on Base network
+        const network = await provider.getNetwork();
+        const baseChainId = BigInt(testnet ? 84532 : 8453); // Base Testnet : Base Mainnet
+        
+        if (network.chainId !== baseChainId) {
+          throw new Error(`Please switch to Base ${testnet ? 'Testnet' : 'Mainnet'} in your wallet to continue.`);
+        }
+        
         await provider.send("eth_requestAccounts", []);
         const signer = await provider.getSigner();
+        
+        // Additional validation: Check if recipient address is valid for Base
+        if (!ethers.isAddress(recipient)) {
+          throw new Error("Invalid recipient address format.");
+        }
 
-        // Convert amount to Wei (ETH has 18 decimals)
         const amountInWei = ethers.parseEther(parsed.toString());
+        
+        setIsConnectingWallet(false);
+        
+        // Add gas estimation for better UX
+        try {
+          const gasEstimate = await signer.estimateGas({
+            to: recipient,
+            value: amountInWei,
+          });
+          
+          const tx = await signer.sendTransaction({
+            to: recipient,
+            value: amountInWei,
+            gasLimit: gasEstimate,
+          });
 
-        const tx = await signer.sendTransaction({
-          to: recipient,
-          value: amountInWei,
-        });
-
-        setStatus("checking");
-        await tx.wait();
-        setStatus("success");
-        setMessage(tx.hash);
-        return;
+          setStatus("checking");
+          await tx.wait();
+          setStatus("success");
+          setMessage(tx.hash);
+          return;
+        } catch (gasError) {
+          console.error("Gas estimation or transaction failed:", gasError);
+          throw new Error("Insufficient funds for gas or invalid transaction.");
+        }
       }
 
       // USDC payments using Base Pay
@@ -208,8 +269,10 @@ function DonateCard() {
       setStatus("error");
       const e = err as Error;
       setMessage(e?.message || "Payment failed");
+    } finally {
+      setIsConnectingWallet(false);
     }
-  }, [currentAmount, isRecipientValid, recipient, testnet, currency]);
+  }, [currentAmount, isRecipientValid, recipient, testnet, currency, lastPaymentAttempt]);
 
   return (
     <div className="min-h-[70vh] p-4">
@@ -231,7 +294,10 @@ function DonateCard() {
                     <button
                       key={curr}
                       type="button"
-                      onClick={() => setCurrency(curr)}
+                      onClick={() => {
+                        setCurrency(curr);
+                        setCustomAmount(""); // Clear custom amount when switching currency
+                      }}
                       className={`h-10 text-sm font-medium rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0052FF] ${
                         active
                           ? "bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
@@ -279,9 +345,9 @@ function DonateCard() {
                 <input
                   type="number"
                   inputMode="decimal"
-                  min="0.01"
-                  step="0.01"
-                  placeholder="0.00"
+                  min={currency === "ETH" ? "0.0001" : "0.01"}
+                  step={currency === "ETH" ? "0.0001" : "0.01"}
+                  placeholder={currency === "ETH" ? "0.0000" : "0.00"}
                   value={customAmount}
                   onChange={(e) => {
                     setCustomAmount(e.target.value);
@@ -289,15 +355,27 @@ function DonateCard() {
                   }}
                   className={`pl-7 w-full max-w-xs px-3 py-3 rounded-lg text-white placeholder:text-gray-400 outline-none transition-all bg-[rgba(255,255,255,0.06)] border ${
                     customAmount
+                      ? isAmountValid
                       ? "border-blue-500 ring-1 ring-blue-500/20"
+                        : "border-red-500 ring-1 ring-red-500/20"
                       : "border-[rgba(255,255,255,0.15)]"
                   }`}
                 />
               </div>
               {customAmount && (
+                <div>
                 <p className="text-xs text-gray-400">
-                  Custom amount: {currency === "ETH" ? "Ξ" : "$"}{Number.parseFloat(customAmount || "0").toFixed(currency === "ETH" ? 4 : 2)} {currency}
-                </p>
+                    Custom amount: {currency === "ETH" ? "Ξ" : "$"}{Number.parseFloat(customAmount || "0").toFixed(currency === "ETH" ? 4 : 2)} {currency}
+                  </p>
+                  {!isAmountValid && (
+                    <p className="text-xs text-red-400 mt-1">
+                      {currency === "ETH" 
+                        ? "Amount must be between 0.0001 and 10 ETH"
+                        : "Amount must be between $0.01 and $10,000"
+                      }
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 
@@ -348,11 +426,18 @@ function DonateCard() {
         )}
 
         <div className="mt-5 w-full">
+          {isConnectingWallet ? (
+            <div className="flex items-center justify-center h-14 bg-gray-700 rounded-lg">
+              <Wallet className="h-4 w-4 mr-2 animate-pulse" />
+              <span className="text-sm text-gray-300">Connecting wallet...</span>
+            </div>
+          ) : (
           <BasePayButton
             colorScheme="dark"
             onClick={handlePayment}
             disabled={!isAmountValid || !isRecipientValid || status === "paying" || status === "checking"}
           />
+          )}
         </div>
 
         {status !== "idle" && (
@@ -366,7 +451,9 @@ function DonateCard() {
                   {message && (
                     <div className="flex items-center justify-between gap-2 p-2 bg-green-500/5 rounded border border-green-500/20">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-green-400 mb-1">Transaction ID:</p>
+                        <p className="text-xs text-green-400 mb-1">
+                          {currency === "ETH" ? "Transaction Hash:" : "Payment ID:"}
+                        </p>
                         <p className="text-xs font-mono text-green-300 break-all sm:break-normal">
                           <span className="sm:hidden">
                             {message.length > 16 ? `${message.slice(0, 8)}...${message.slice(-6)}` : message}
@@ -429,7 +516,7 @@ function DonateCard() {
             <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 shrink-0" />
             <div>
               <p className="text-sm font-medium text-white">Secure Payment</p>
-              <p className="text-xs text-gray-300">Payments use {currency} on Base Mainnet</p>
+              <p className="text-xs text-gray-300">Payments use {currency} on Base {testnet ? 'Testnet' : 'Mainnet'}</p>
             </div>
           </div>
         </div>
