@@ -121,7 +121,17 @@ function DonateCard() {
   const isValidAddress = (address: string): boolean =>
     Boolean(address) && address.length === 42 && address.startsWith("0x");
 
-  const currentAmount = customAmount ? Number.parseFloat(customAmount) : selectedAmount;
+  // Calculate current amount based on currency and selection
+  const getEthAmount = (usdAmount: number) => {
+    const ethAmounts = { 1: 0.0001, 3: 0.001, 5: 0.01 };
+    return ethAmounts[usdAmount as keyof typeof ethAmounts] || usdAmount;
+  };
+  
+  const currentAmount = customAmount 
+    ? Number.parseFloat(customAmount) 
+    : currency === "ETH" 
+      ? getEthAmount(selectedAmount)
+      : selectedAmount;
   const isAmountValid = Number.isFinite(currentAmount) && currentAmount > 0;
   const isRecipientValid = isValidAddress(recipient);
 
@@ -238,6 +248,10 @@ function DonateCard() {
             <div className="grid grid-cols-3 gap-2">
               {[1, 3, 5].map((amt) => {
                 const active = !customAmount && selectedAmount === amt;
+                
+                const displayAmount = currency === "ETH" ? getEthAmount(amt) : amt;
+                const displaySymbol = currency === "ETH" ? "Ξ" : "$";
+                
                 return (
                   <button
                     key={amt}
@@ -252,7 +266,7 @@ function DonateCard() {
                         : "bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] text-gray-200 border border-[rgba(255,255,255,0.15)]"
                     }`}
                   >
-                    ${amt}
+                    {displaySymbol}{displayAmount}
                   </button>
                 );
               })}
