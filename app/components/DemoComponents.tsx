@@ -141,7 +141,6 @@ function DonateCard() {
         throw new Error("Enter a valid recipient address");
       }
 
-      // Use Base Pay SDK - works both inside and outside Farcaster
       const payment = await pay({
         amount: normalizedAmount,
         to: recipient as `0x${string}`,
@@ -170,13 +169,8 @@ function DonateCard() {
     <div className="min-h-[70vh] p-4">
       <div className="mx-auto max-w-md w-full">
         <div className="mb-6 text-center">
-          <h1 className="mb-2 text-2xl font-bold text-white leading-tight">Buy Me a Coffee</h1>
-          <p className="text-sm text-gray-300">Support your favorite creator with a small tip on Base</p>
-          {testnet && (
-            <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-              🧪 Testnet Mode - Base Sepolia
-            </div>
-          )}
+          <h1 className="mb-2 text-2xl font-bold text-white leading-tight">Buy a coffee</h1>
+          <p className="text-sm text-gray-300">Support your favorite creator with a small USDC tip on Base</p>
         </div>
 
         <Card title="Choose Amount">
@@ -361,9 +355,7 @@ function DonateCard() {
             <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 shrink-0" />
             <div>
               <p className="text-sm font-medium text-white">Secure Payment</p>
-              <p className="text-xs text-gray-300">
-                Powered by Base Pay - USDC on {testnet ? "Base Sepolia (Testnet)" : "Base Mainnet"}
-              </p>
+              <p className="text-xs text-gray-300">Payments use USDC on Base Mainnet</p>
             </div>
           </div>
         </div>
