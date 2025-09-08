@@ -1,8 +1,24 @@
 "use client";
 
+import { useEffect } from "react";
 import { Home } from "./components/DemoComponents";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 export default function App() {
+  useEffect(() => {
+    // Initialize the MiniApp SDK and signal that the app is ready
+    const initializeSdk = async () => {
+      try {
+        // Signal that the app is ready and the splash screen can be hidden
+        await sdk.actions.ready();
+        console.log("MiniApp SDK initialized successfully");
+      } catch (error) {
+        console.error("Failed to initialize MiniApp SDK:", error);
+      }
+    };
+
+    initializeSdk();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen font-sans text-white" style={{ backgroundColor: "#0a0b2b" }}>
