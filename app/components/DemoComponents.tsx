@@ -5,6 +5,14 @@ import { pay, getPaymentStatus } from "@base-org/account";
 import { BasePayButton } from "./base-pay-button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { CheckCircle, XCircle, Loader2, Shield } from "lucide-react";
+import { ethers } from "ethers";
+
+// Type for ethereum provider
+interface EthereumProvider {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  send: (method: string, params?: unknown[]) => Promise<unknown>;
+  isMetaMask?: boolean;
+}
 
 // Reusable Button
 type ButtonProps = {
@@ -104,6 +112,7 @@ function DonateCard() {
   const [selectedAmount, setSelectedAmount] = useState<number>(3);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(defaultRecipient);
+  const [currency, setCurrency] = useState<"USDC" | "ETH">("USDC");
   const [status, setStatus] = useState<"idle" | "paying" | "checking" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
@@ -133,14 +142,41 @@ function DonateCard() {
     try {
       const parsed = Number.parseFloat(String(currentAmount));
       if (Number.isNaN(parsed) || parsed <= 0) {
-        throw new Error("Enter a valid amount in USD");
+        throw new Error(`Enter a valid amount in ${currency === "ETH" ? "ETH" : "USD"}`);
       }
-      const normalizedAmount = parsed.toFixed(2);
 
       if (!isRecipientValid) {
         throw new Error("Enter a valid recipient address");
       }
 
+      if (currency === "ETH") {
+        // Handle ETH payments using direct wallet interaction
+        const ethereum = (window as { ethereum?: EthereumProvider }).ethereum;
+        if (!ethereum) {
+          throw new Error("Please install MetaMask or another Web3 wallet to pay with ETH.");
+        }
+
+        const provider = new ethers.BrowserProvider(ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = await provider.getSigner();
+
+        // Convert amount to Wei (ETH has 18 decimals)
+        const amountInWei = ethers.parseEther(parsed.toString());
+
+        const tx = await signer.sendTransaction({
+          to: recipient,
+          value: amountInWei,
+        });
+
+        setStatus("checking");
+        await tx.wait();
+        setStatus("success");
+        setMessage(tx.hash);
+        return;
+      }
+
+      // USDC payments using Base Pay
+      const normalizedAmount = parsed.toFixed(2);
       const payment = await pay({
         amount: normalizedAmount,
         to: recipient as `0x${string}`,
@@ -163,18 +199,42 @@ function DonateCard() {
       const e = err as Error;
       setMessage(e?.message || "Payment failed");
     }
-  }, [currentAmount, isRecipientValid, recipient, testnet]);
+  }, [currentAmount, isRecipientValid, recipient, testnet, currency]);
 
   return (
     <div className="min-h-[70vh] p-4">
       <div className="mx-auto max-w-md w-full">
         <div className="mb-6 text-center">
           <h1 className="mb-2 text-2xl font-bold text-white leading-tight">Buy a coffee</h1>
-          <p className="text-sm text-gray-300">Support your favorite creator with a small USDC tip on Base</p>
+          <p className="text-sm text-gray-300">Support your favorite creator with a small {currency} tip on Base</p>
         </div>
 
         <Card title="Choose Amount">
           <div className="space-y-5">
+            {/* Currency Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs text-gray-300">Currency</label>
+              <div className="grid grid-cols-2 gap-2">
+                {(["USDC", "ETH"] as const).map((curr) => {
+                  const active = currency === curr;
+                  return (
+                    <button
+                      key={curr}
+                      type="button"
+                      onClick={() => setCurrency(curr)}
+                      className={`h-10 text-sm font-medium rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0052FF] ${
+                        active
+                          ? "bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
+                          : "bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] text-gray-200 border border-[rgba(255,255,255,0.15)]"
+                      }`}
+                    >
+                      {curr}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="grid grid-cols-3 gap-2">
               {[1, 3, 5].map((amt) => {
                 const active = !customAmount && selectedAmount === amt;
@@ -199,9 +259,9 @@ function DonateCard() {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-xs text-gray-300">Or enter custom amount (USD)</label>
+              <label className="block text-xs text-gray-300">Or enter custom amount ({currency === "ETH" ? "ETH" : "USD"})</label>
               <div className="relative w-full max-w-xs">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">{currency === "ETH" ? "Ξ" : "$"}</span>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -222,7 +282,7 @@ function DonateCard() {
               </div>
               {customAmount && (
                 <p className="text-xs text-gray-400">
-                  Custom amount: ${Number.parseFloat(customAmount || "0").toFixed(2)} USDC
+                  Custom amount: {currency === "ETH" ? "Ξ" : "$"}{Number.parseFloat(customAmount || "0").toFixed(currency === "ETH" ? 4 : 2)} {currency}
                 </p>
               )}
             </div>
@@ -268,7 +328,7 @@ function DonateCard() {
           <div className="mt-5 border rounded-lg p-4" style={{ borderColor: "rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.1)" }}>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-300">Total Amount:</span>
-              <span className="text-lg font-bold text-white">${currentAmount.toFixed(2)} USDC</span>
+              <span className="text-lg font-bold text-white">{currency === "ETH" ? "Ξ" : "$"}{currentAmount.toFixed(currency === "ETH" ? 4 : 2)} {currency}</span>
             </div>
           </div>
         )}
@@ -355,7 +415,7 @@ function DonateCard() {
             <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 shrink-0" />
             <div>
               <p className="text-sm font-medium text-white">Secure Payment</p>
-              <p className="text-xs text-gray-300">Payments use USDC on Base Mainnet</p>
+              <p className="text-xs text-gray-300">Payments use {currency} on Base Mainnet</p>
             </div>
           </div>
         </div>
