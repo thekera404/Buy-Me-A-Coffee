@@ -200,17 +200,65 @@ function DonateCard() {
           throw new Error("Please install MetaMask or another Web3 wallet to pay with ETH.");
         }
 
-        const provider = new ethers.BrowserProvider(ethereum);
-        
-        // SECURITY FIX: Verify we're on Base network
-        const network = await provider.getNetwork();
+        // Always request accounts first; some wallets block chain RPCs pre-connection
+        await ethereum.request({ method: "eth_requestAccounts" });
+
+        // Verify/switch to Base network with fallback if eth_chainId is unsupported
         const baseChainId = BigInt(testnet ? 84532 : 8453); // Base Testnet : Base Mainnet
-        
-        if (network.chainId !== baseChainId) {
-          throw new Error(`Please switch to Base ${testnet ? 'Testnet' : 'Mainnet'} in your wallet to continue.`);
+        let currentChainId: bigint | null = null;
+        try {
+          const chainIdResult = (await ethereum.request({ method: "eth_chainId" })) as string | number;
+          const chainIdString = typeof chainIdResult === "number" ? `0x${chainIdResult.toString(16)}` : String(chainIdResult);
+          currentChainId = BigInt(chainIdString);
+        } catch {
+          // Fallback to net_version for non-EIP-1193 providers
+          const netVersion = (await ethereum.request({ method: "net_version" })) as string | number;
+          const netVersionString = typeof netVersion === "number" ? String(netVersion) : netVersion;
+          currentChainId = BigInt(netVersionString);
         }
-        
-        await provider.send("eth_requestAccounts", []);
+
+        if (currentChainId !== baseChainId) {
+          const hexChainId = `0x${baseChainId.toString(16)}`;
+          try {
+            await ethereum.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: hexChainId }],
+            });
+          } catch (switchError: any) {
+            // If chain not added, add Base then retry switch
+            if (switchError?.code === 4902) {
+              const isTestnet = testnet;
+              await ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [
+                  isTestnet
+                    ? {
+                        chainId: "0x14a33",
+                        chainName: "Base Sepolia",
+                        nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+                        rpcUrls: ["https://sepolia.base.org"],
+                        blockExplorerUrls: ["https://sepolia.basescan.org"],
+                      }
+                    : {
+                        chainId: "0x2105",
+                        chainName: "Base",
+                        nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+                        rpcUrls: ["https://mainnet.base.org"],
+                        blockExplorerUrls: ["https://basescan.org"],
+                      },
+                ],
+              });
+              await ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: hexChainId }],
+              });
+            } else {
+              throw new Error(`Please switch to Base ${testnet ? "Testnet" : "Mainnet"} in your wallet to continue.`);
+            }
+          }
+        }
+
+        const provider = new ethers.BrowserProvider(ethereum);
         const signer = await provider.getSigner();
         
         // Additional validation: Check if recipient address is valid for Base
