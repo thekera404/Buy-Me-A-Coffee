@@ -202,7 +202,7 @@ function DonateCard() {
 
         // Always request accounts first; some wallets block chain RPCs pre-connection
         await ethereum.request({ method: "eth_requestAccounts" });
-
+        
         // Verify/switch to Base network with fallback if eth_chainId is unsupported
         const baseChainId = BigInt(testnet ? 84532 : 8453); // Base Testnet : Base Mainnet
         let currentChainId: bigint | null = null;
@@ -224,9 +224,11 @@ function DonateCard() {
               method: "wallet_switchEthereumChain",
               params: [{ chainId: hexChainId }],
             });
-          } catch (switchError: any) {
+          } catch (switchError: unknown) {
             // If chain not added, add Base then retry switch
-            if (switchError?.code === 4902) {
+            const hasCode = (e: unknown): e is { code?: number | string } =>
+              typeof e === "object" && e !== null && "code" in e;
+            if (hasCode(switchError) && (switchError.code === 4902 || switchError.code === "4902")) {
               const isTestnet = testnet;
               await ethereum.request({
                 method: "wallet_addEthereumChain",
