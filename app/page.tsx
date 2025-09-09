@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Home } from "./components/DemoComponents";
 import { sdk } from "@farcaster/miniapp-sdk";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function App() {
   useEffect(() => {
@@ -23,6 +24,9 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-screen font-sans text-white" style={{ backgroundColor: "#0a0b2b" }}>
       <div className="w-full max-w-md mx-auto px-4 py-3">
+        <div className="flex justify-end mb-3">
+          <ConnectButton showBalance={false} chainStatus="icon" />
+        </div>
         <main className="flex-1">
           <Home />
         </main>
