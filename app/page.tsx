@@ -5,6 +5,8 @@ import { Home } from "./components/DemoComponents";
 import { sdk } from "@farcaster/miniapp-sdk";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
+const hasProjectId = Boolean(process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID);
+
 export default function App() {
   useEffect(() => {
     // Initialize the MiniApp SDK and signal that the app is ready
@@ -25,7 +27,9 @@ export default function App() {
     <div className="flex flex-col min-h-screen font-sans text-white" style={{ backgroundColor: "#0a0b2b" }}>
       <div className="w-full max-w-md mx-auto px-4 py-3">
         <div className="flex justify-end mb-3">
-          <ConnectButton showBalance={false} chainStatus="icon" />
+          {hasProjectId ? (
+            <ConnectButton showBalance={false} chainStatus="icon" />
+          ) : null}
         </div>
         <main className="flex-1">
           <Home />
