@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
+import { BrowserProvider } from 'ethers';
 import { validateDonationAmount, validateWalletAddress, validateEmail } from '../../lib/validation';
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
@@ -33,18 +34,24 @@ export default function DemoComponents() {
   });
 
   // Enhanced error handling with specific user messages
-  const getErrorMessage = useCallback((error: any): string => {
-    if (error?.code === 'INSUFFICIENT_FUNDS') {
-      return 'Insufficient funds in your wallet. Please add more funds and try again.';
+  const getErrorMessage = useCallback((error: unknown): string => {
+    if (error && typeof error === 'object' && 'code' in error) {
+      const errorObj = error as { code: string; message?: string };
+      if (errorObj.code === 'INSUFFICIENT_FUNDS') {
+        return 'Insufficient funds in your wallet. Please add more funds and try again.';
+      }
+      if (errorObj.code === 'USER_REJECTED') {
+        return 'Transaction was cancelled. Please try again if you want to complete the payment.';
+      }
+      if (errorObj.code === 'NETWORK_ERROR') {
+        return 'Network connection error. Please check your internet connection and try again.';
+      }
     }
-    if (error?.code === 'USER_REJECTED') {
-      return 'Transaction was cancelled. Please try again if you want to complete the payment.';
-    }
-    if (error?.code === 'NETWORK_ERROR') {
-      return 'Network connection error. Please check your internet connection and try again.';
-    }
-    if (error?.message?.includes('gas')) {
-      return 'Transaction fee too high. Please try again later when network is less congested.';
+    if (error && typeof error === 'object' && 'message' in error) {
+      const errorObj = error as { message: string };
+      if (errorObj.message?.includes('gas')) {
+        return 'Transaction fee too high. Please try again later when network is less congested.';
+      }
     }
     return 'Payment failed. Please check your wallet connection and try again.';
   }, []);
@@ -82,7 +89,7 @@ export default function DemoComponents() {
         throw new Error('MetaMask is not installed. Please install MetaMask to continue.');
       }
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const provider = new BrowserProvider(window.ethereum);
       
       // Request account access
       const accounts = await provider.send('eth_requestAccounts', []);
@@ -90,23 +97,23 @@ export default function DemoComponents() {
         throw new Error('No wallet accounts found. Please connect your wallet.');
       }
 
-      const signer = provider.getSigner();
+      const signer = await provider.getSigner();
       const network = await provider.getNetwork();
       
       // Verify we're on Base network
-      if (network.chainId !== 8453) { // Base Mainnet chain ID
+      if (network.chainId !== 8453n) { // Base Mainnet chain ID
         throw new Error('Please switch to Base network in your wallet.');
       }
 
       // Get gas price and estimate
-      const gasPrice = await provider.getGasPrice();
+      const feeData = await provider.getFeeData();
       const gasLimit = 21000; // Standard ETH transfer gas limit
       
       const transaction = {
         to: process.env.NEXT_PUBLIC_DONATION_RECIPIENT,
-        value: ethers.utils.parseEther(amount),
+        value: ethers.parseEther(amount),
         gasLimit,
-        gasPrice
+        gasPrice: feeData.gasPrice
       };
 
       // Send transaction
@@ -126,7 +133,7 @@ export default function DemoComponents() {
         isLoading: false, 
         error: null, 
         success: true, 
-        txHash: receipt.transactionHash 
+        txHash: receipt?.hash || tx.hash
       });
 
       // Reset form after successful payment
@@ -134,7 +141,7 @@ export default function DemoComponents() {
       setMessage('');
       setEmail('');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ETH Payment Error:', error);
       setPaymentState({ 
         isLoading: false, 
@@ -174,7 +181,7 @@ export default function DemoComponents() {
       setMessage('');
       setEmail('');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('USDC Payment Error:', error);
       setPaymentState({ 
         isLoading: false, 
@@ -362,3 +369,6 @@ export default function DemoComponents() {
     </div>
   );
 }
+
+// Export Home component for compatibility
+export const Home = DemoComponents;

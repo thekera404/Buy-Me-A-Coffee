@@ -1,4 +1,3 @@
-// lib/validation.ts
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
