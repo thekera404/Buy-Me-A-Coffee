@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { http, createConfig, WagmiProvider } from "wagmi";
+import { http, WagmiProvider } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -14,18 +14,16 @@ import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string;
 const isTestnet = (process.env.NEXT_PUBLIC_BASEPAY_TESTNET || "false") === "true";
 
-const wagmiConfig = createConfig(
-  getDefaultConfig({
-    appName: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Mini App",
-    projectId: projectId || "",
-    chains: isTestnet ? [baseSepolia] : [base],
-    transports: {
-      [base.id]: http("https://mainnet.base.org"),
-      [baseSepolia.id]: http("https://sepolia.base.org"),
-    },
-    ssr: true,
-  })
-);
+const wagmiConfig = getDefaultConfig({
+  appName: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Mini App",
+  projectId: projectId || "",
+  chains: isTestnet ? [baseSepolia] : [base],
+  transports: {
+    [base.id]: http("https://mainnet.base.org"),
+    [baseSepolia.id]: http("https://sepolia.base.org"),
+  },
+  ssr: true,
+});
 
 const queryClient = new QueryClient();
 
