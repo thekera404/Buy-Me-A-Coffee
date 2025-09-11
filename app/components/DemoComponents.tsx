@@ -8,11 +8,6 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
 
 // Enhanced error types for better error handling
-interface PaymentError {
-  code: string;
-  message: string;
-  userMessage: string;
-}
 
 interface PaymentState {
   isLoading: boolean;
