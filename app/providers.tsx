@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { http, WagmiProvider } from "wagmi";
+import { http, WagmiProvider, createConfig } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from '@reown/appkit/react'
@@ -41,13 +41,13 @@ if (projectId) {
 const queryClient = new QueryClient();
 
 export function Providers(props: { children: ReactNode }) {
-  const config = wagmiAdapter?.wagmiConfig || {
+  const config = wagmiAdapter?.wagmiConfig || createConfig({
     chains: isTestnet ? [baseSepolia] : [base],
     transports: {
       [base.id]: http("https://mainnet.base.org"),
       [baseSepolia.id]: http("https://sepolia.base.org"),
     },
-  };
+  });
 
   return (
     <WagmiProvider config={config}>
