@@ -16,7 +16,6 @@ let wagmiAdapter: WagmiAdapter | null = null;
 
 if (projectId) {
   wagmiAdapter = new WagmiAdapter({
-    storage: typeof window !== 'undefined' ? localStorage : undefined,
     ssr: true,
     projectId,
     networks: isTestnet ? [baseSepolia] : [base]
@@ -28,16 +27,13 @@ if (projectId) {
     networks: isTestnet ? [baseSepolia] : [base],
     defaultNetwork: isTestnet ? baseSepolia : base,
     metadata: {
-      name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Buy Me a Coffee",
-      description: 'Support creators with crypto donations',
-      url: process.env.NEXT_PUBLIC_URL || 'https://localhost:3000',
-      icons: ['/icon.png']
+      name: "Buy Me A Coffee",
+      description: "Support creators with crypto donations",
+      url: "https://buymeacoffee.com",
+      icons: ["https://buymeacoffee.com/icon.png"]
     },
     features: {
       analytics: true,
-      email: true,
-      socials: ['google', 'x', 'github', 'discord', 'apple'],
-      emailShowWallets: true
     }
   });
 }
