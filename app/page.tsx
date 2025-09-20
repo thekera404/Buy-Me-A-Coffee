@@ -3,11 +3,11 @@
 import { useEffect } from "react";
 import { Home } from "./components/DemoComponents";
 import { sdk } from "@farcaster/miniapp-sdk";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-
-const hasProjectId = Boolean(process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID);
+import { useAccount } from 'wagmi'
 
 export default function App() {
+  const { address, isConnected } = useAccount()
+
   useEffect(() => {
     // Initialize the MiniApp SDK and signal that the app is ready
     const initializeSdk = async () => {
@@ -27,9 +27,15 @@ export default function App() {
     <div className="flex flex-col min-h-screen font-sans text-white" style={{ backgroundColor: "#0a0b2b" }}>
       <div className="w-full max-w-md mx-auto px-4 py-3">
         <div className="flex justify-end mb-3">
-          {hasProjectId ? (
-            <ConnectButton showBalance={false} chainStatus="icon" />
-          ) : null}
+          {isConnected ? (
+            <div className="px-4 py-2 bg-green-600 rounded-lg text-white font-medium">
+              {address?.slice(0, 6)}...{address?.slice(-4)}
+            </div>
+          ) : (
+            <div className="px-4 py-2 bg-gray-600 rounded-lg text-white font-medium">
+              Wallet Not Connected
+            </div>
+          )}
         </div>
         <main className="flex-1">
           <Home />
