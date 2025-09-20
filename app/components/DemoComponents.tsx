@@ -14,18 +14,12 @@ interface PaymentState {
   txHash: string | null;
 }
 
-// Add proper typing for window.ethereum
+// Type for ethereum provider (no global declaration needed)
 interface EthereumProvider {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
   isMetaMask?: boolean;
   selectedAddress?: string;
   chainId?: string;
-}
-
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-  }
 }
 
 export default function DemoComponents() {
@@ -96,8 +90,8 @@ export default function DemoComponents() {
         throw new Error('MetaMask is not installed. Please install MetaMask to continue.');
       }
 
-      // Type assertion to ensure window.ethereum is treated as an EIP-1193 provider
-      const provider = new BrowserProvider(window.ethereum as EthereumProvider);
+      // Type assertion without global declaration
+      const provider = new BrowserProvider(window.ethereum as unknown as EthereumProvider);
       
       // Request account access
       const accounts = await provider.send('eth_requestAccounts', []);
@@ -105,8 +99,7 @@ export default function DemoComponents() {
         throw new Error('No wallet accounts found. Please connect your wallet.');
       }
 
-      // Get signer and network info
-      await provider.getSigner();
+      // Get network info
       const network = await provider.getNetwork();
       
       // Verify we're on Base network
