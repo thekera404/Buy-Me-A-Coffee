@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { ethers } from 'ethers';
 import { BrowserProvider } from 'ethers';
 import { validateDonationAmount, validateWalletAddress, validateEmail } from '../../lib/validation';
 import { Alert, AlertDescription } from './ui/alert';
@@ -16,14 +15,16 @@ interface PaymentState {
 }
 
 // Add proper typing for window.ethereum
+interface EthereumProvider {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  isMetaMask?: boolean;
+  selectedAddress?: string;
+  chainId?: string;
+}
+
 declare global {
   interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-      isMetaMask?: boolean;
-      selectedAddress?: string;
-      chainId?: string;
-    } & any;
+    ethereum?: EthereumProvider;
   }
 }
 
@@ -96,7 +97,7 @@ export default function DemoComponents() {
       }
 
       // Type assertion to ensure window.ethereum is treated as an EIP-1193 provider
-      const provider = new BrowserProvider(window.ethereum as any);
+      const provider = new BrowserProvider(window.ethereum as EthereumProvider);
       
       // Request account access
       const accounts = await provider.send('eth_requestAccounts', []);
@@ -104,7 +105,8 @@ export default function DemoComponents() {
         throw new Error('No wallet accounts found. Please connect your wallet.');
       }
 
-      const signer = await provider.getSigner();
+      // Get signer and network info
+      await provider.getSigner();
       const network = await provider.getNetwork();
       
       // Verify we're on Base network
@@ -114,7 +116,7 @@ export default function DemoComponents() {
   
       // Continue with your existing payment logic...
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ETH Payment Error:', error);
       setPaymentState({
         isLoading: false,
@@ -123,7 +125,7 @@ export default function DemoComponents() {
         txHash: null,
       });
     }
-  }, [amount, email, getErrorMessage]);
+  }, [getErrorMessage]);
 
   // Enhanced USDC payment with better error handling
   const handleUSDCPayment = useCallback(async () => {
