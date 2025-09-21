@@ -1,6 +1,47 @@
 import { WalletKit } from '@reown/walletkit'
 import { Core } from '@walletconnect/core'
 
+// Type definitions for WalletConnect events and data structures
+interface SessionProposal {
+  id: number
+  params: {
+    requiredNamespaces: Record<string, NamespaceConfig>
+    optionalNamespaces?: Record<string, NamespaceConfig>
+  }
+}
+
+interface NamespaceConfig {
+  chains?: string[]
+  methods: string[]
+  events: string[]
+}
+
+interface SessionNamespace {
+  accounts: string[]
+  methods: string[]
+  events: string[]
+}
+
+interface SessionRequest {
+  topic: string
+  params: {
+    request: {
+      method: string
+      params: unknown[]
+    }
+  }
+  id: number
+}
+
+interface TransactionParams {
+  from?: string
+  to?: string
+  value?: string
+  data?: string
+  gas?: string
+  gasPrice?: string
+}
+
 export class WalletKitService {
   private walletKit: WalletKit | null = null
   private core: Core | null = null
@@ -58,7 +99,7 @@ export class WalletKitService {
     })
   }
 
-  private async approveSession(proposal: any) {
+  private async approveSession(proposal: SessionProposal) {
     try {
       if (!this.walletKit) throw new Error('WalletKit not initialized')
 
@@ -66,7 +107,7 @@ export class WalletKitService {
       const { requiredNamespaces, optionalNamespaces } = proposal.params
 
       // Build session namespaces based on supported chains and methods
-      const sessionNamespaces: any = {}
+      const sessionNamespaces: Record<string, SessionNamespace> = {}
 
       // Handle required namespaces
       Object.keys(requiredNamespaces).forEach((key) => {
@@ -110,7 +151,7 @@ export class WalletKitService {
     }
   }
 
-  private async handleSessionRequest(request: any) {
+  private async handleSessionRequest(request: SessionRequest) {
     try {
       if (!this.walletKit) throw new Error('WalletKit not initialized')
 
@@ -123,7 +164,7 @@ export class WalletKitService {
       switch (sessionRequest.method) {
         case 'eth_sendTransaction':
           // Handle transaction signing
-          const txResult = await this.handleTransaction(sessionRequest.params[0])
+          const txResult = await this.handleTransaction(sessionRequest.params[0] as TransactionParams)
           await this.walletKit.respondSessionRequest({
             topic,
             response: {
@@ -136,7 +177,7 @@ export class WalletKitService {
 
         case 'personal_sign':
           // Handle message signing
-          const signResult = await this.handlePersonalSign(sessionRequest.params)
+          const signResult = await this.handlePersonalSign(sessionRequest.params as string[])
           await this.walletKit.respondSessionRequest({
             topic,
             response: {
@@ -150,7 +191,7 @@ export class WalletKitService {
         case 'eth_signTypedData':
         case 'eth_signTypedData_v4':
           // Handle typed data signing
-          const typedDataResult = await this.handleTypedDataSign(sessionRequest.params)
+          const typedDataResult = await this.handleTypedDataSign(sessionRequest.params as unknown[])
           await this.walletKit.respondSessionRequest({
             topic,
             response: {
@@ -192,7 +233,7 @@ export class WalletKitService {
     }
   }
 
-  private async handleTransaction(txParams: any): Promise<string> {
+  private async handleTransaction(txParams: TransactionParams): Promise<string> {
     // Implement transaction handling logic
     // This is a placeholder - you should implement actual transaction signing
     console.log('Transaction params:', txParams)
@@ -207,7 +248,7 @@ export class WalletKitService {
     return '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
   }
 
-  private async handlePersonalSign(params: any[]): Promise<string> {
+  private async handlePersonalSign(params: string[]): Promise<string> {
     // Implement message signing logic
     console.log('Personal sign params:', params)
     
@@ -221,7 +262,7 @@ export class WalletKitService {
     return '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
   }
 
-  private async handleTypedDataSign(params: any[]): Promise<string> {
+  private async handleTypedDataSign(params: unknown[]): Promise<string> {
     // Implement typed data signing logic
     console.log('Typed data sign params:', params)
     

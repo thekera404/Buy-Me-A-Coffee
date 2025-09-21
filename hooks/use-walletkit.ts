@@ -7,7 +7,7 @@ export interface UseWalletKitReturn {
   isInitialized: boolean
   isInitializing: boolean
   error: string | null
-  activeSessions: Record<string, any>
+  activeSessions: Record<string, unknown>
   pair: (uri: string) => Promise<void>
   disconnectSession: (topic: string) => Promise<void>
   refreshSessions: () => void
@@ -18,7 +18,7 @@ export function useWalletKit(): UseWalletKitReturn {
   const [isInitialized, setIsInitialized] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [activeSessions, setActiveSessions] = useState<Record<string, any>>({})
+  const [activeSessions, setActiveSessions] = useState<Record<string, unknown>>({})
 
   const initializeWalletKit = useCallback(async () => {
     const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID

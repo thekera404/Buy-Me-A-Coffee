@@ -10,9 +10,14 @@ import { Separator } from '@/app/components/ui/separator'
 import { Copy, ExternalLink, Trash2, Wifi, WifiOff } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
+interface SessionNamespace {
+  accounts?: string[]
+  methods?: string[]
+  events?: string[]
+}
+
 export function WalletKitManager() {
   const {
-    walletKit,
     isInitialized,
     isInitializing,
     error,
@@ -44,7 +49,8 @@ export function WalletKitManager() {
         title: 'Success',
         description: 'Pairing initiated successfully',
       })
-    } catch (err) {
+    } catch (error) {
+      console.error('Pairing failed:', error)
       toast({
         title: 'Error',
         description: 'Failed to pair with dApp',
@@ -62,7 +68,8 @@ export function WalletKitManager() {
         title: 'Success',
         description: 'Session disconnected successfully',
       })
-    } catch (err) {
+    } catch (error) {
+      console.error('Disconnect failed:', error)
       toast({
         title: 'Error',
         description: 'Failed to disconnect session',
@@ -253,7 +260,7 @@ export function WalletKitManager() {
                       <div className="space-y-2">
                         <h5 className="text-sm font-medium">Supported Namespaces</h5>
                         <div className="space-y-2">
-                          {Object.entries(session.namespaces).map(([namespace, config]: [string, any]) => (
+                          {Object.entries(session.namespaces).map(([namespace, config]: [string, { accounts?: string[]; methods?: string[]; events?: string[] }]) => (
                             <div key={namespace} className="text-xs space-y-1">
                               <Badge variant="outline">{namespace}</Badge>
                               <div className="ml-2 space-y-1">
