@@ -2,23 +2,47 @@ import { useState, useEffect, useCallback } from 'react'
 import { walletKitService } from '@/lib/walletkit'
 import { WalletKit } from '@reown/walletkit'
 
+interface SessionMetadata {
+  name?: string
+  url?: string
+  description?: string
+  icons?: string[]
+}
+
+interface SessionPeer {
+  metadata?: SessionMetadata
+}
+
+interface SessionNamespace {
+  accounts: string[]
+  methods: string[]
+  events: string[]
+}
+
+interface Session {
+  topic: string
+  peer?: SessionPeer
+  namespaces?: Record<string, SessionNamespace>
+  expiry?: number
+}
+
 export interface UseWalletKitReturn {
-  walletKit: WalletKit | null
+  walletKit: InstanceType<typeof WalletKit> | null
   isInitialized: boolean
   isInitializing: boolean
   error: string | null
-  activeSessions: Record<string, unknown>
+  activeSessions: Record<string, Session>
   pair: (uri: string) => Promise<void>
   disconnectSession: (topic: string) => Promise<void>
   refreshSessions: () => void
 }
 
 export function useWalletKit(): UseWalletKitReturn {
-  const [walletKit, setWalletKit] = useState<WalletKit | null>(null)
+  const [walletKit, setWalletKit] = useState<InstanceType<typeof WalletKit> | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [activeSessions, setActiveSessions] = useState<Record<string, unknown>>({})
+  const [activeSessions, setActiveSessions] = useState<Record<string, Session>>({})
 
   const initializeWalletKit = useCallback(async () => {
     const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID

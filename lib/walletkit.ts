@@ -1,7 +1,25 @@
 import { WalletKit } from '@reown/walletkit'
 import { Core } from '@walletconnect/core'
 
-// Type definitions for WalletConnect events and data structures
+// Session-related interfaces
+interface SessionMetadata {
+  name?: string
+  url?: string
+  description?: string
+  icons?: string[]
+}
+
+interface SessionPeer {
+  metadata?: SessionMetadata
+}
+
+interface Session {
+  topic: string
+  peer?: SessionPeer
+  namespaces?: Record<string, SessionNamespace>
+  expiry?: number
+}
+
 interface SessionProposal {
   id: number
   params: {
@@ -43,8 +61,8 @@ interface TransactionParams {
 }
 
 export class WalletKitService {
-  private walletKit: WalletKit | null = null
-  private core: Core | null = null
+  private walletKit: InstanceType<typeof WalletKit> | null = null
+  private core: InstanceType<typeof Core> | null = null
 
   async initialize(projectId: string) {
     try {
@@ -120,16 +138,18 @@ export class WalletKitService {
       })
 
       // Handle optional namespaces
-      Object.keys(optionalNamespaces || {}).forEach((key) => {
-        const namespace = optionalNamespaces[key]
-        if (!sessionNamespaces[key]) {
-          sessionNamespaces[key] = {
-            accounts: namespace.chains?.map((chain: string) => `${chain}:0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6`) || [],
-            methods: namespace.methods || [],
-            events: namespace.events || [],
+      if (optionalNamespaces) {
+        Object.keys(optionalNamespaces).forEach((key) => {
+          const namespace = optionalNamespaces[key]
+          if (!sessionNamespaces[key]) {
+            sessionNamespaces[key] = {
+              accounts: namespace.chains?.map((chain: string) => `${chain}:0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6`) || [],
+              methods: namespace.methods || [],
+              events: namespace.events || [],
+            }
           }
-        }
-      })
+        })
+      }
 
       // Approve the session
       await this.walletKit.approveSession({
@@ -277,8 +297,8 @@ export class WalletKitService {
   }
 
   // Utility methods
-  getActiveSessions() {
-    return this.walletKit?.getActiveSessions() || {}
+  getActiveSessions(): Record<string, Session> {
+    return (this.walletKit?.getActiveSessions() || {}) as Record<string, Session>
   }
 
   async disconnectSession(topic: string) {

@@ -241,7 +241,7 @@ export function WalletKitManager() {
                       <div>
                         <span className="text-muted-foreground">Expiry:</span>
                         <div className="text-xs">
-                          {new Date(session.expiry * 1000).toLocaleString()}
+                          {session.expiry ? new Date(session.expiry * 1000).toLocaleString() : 'No expiry'}
                         </div>
                       </div>
                     </div>
@@ -254,7 +254,7 @@ export function WalletKitManager() {
                       <div className="space-y-2">
                         <h5 className="text-sm font-medium">Supported Namespaces</h5>
                         <div className="space-y-2">
-                          {Object.entries(session.namespaces).map(([namespace, config]: [string, { accounts?: string[]; methods?: string[]; events?: string[] }]) => (
+                          {Object.entries(session.namespaces).map(([namespace, config]) => (
                             <div key={namespace} className="text-xs space-y-1">
                               <Badge variant="outline">{namespace}</Badge>
                               <div className="ml-2 space-y-1">
