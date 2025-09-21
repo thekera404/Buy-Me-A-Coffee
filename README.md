@@ -1,6 +1,6 @@
 # ☕ Buy Me a Coffee - MiniApp
 
-A modern, feature-rich tipping application built for Farcaster with dual cryptocurrency payment support (USDC & ETH) on Base network.
+A modern, feature-rich tipping application built for Farcaster with dual cryptocurrency payment support (USDC & ETH) on Base network, now with integrated WalletConnect Wallet SDK for Web3 wallet functionality.
 
 ## ✨ Features
 
@@ -9,31 +9,30 @@ A modern, feature-rich tipping application built for Farcaster with dual cryptoc
 - **ETH Payments**: Direct wallet integration using ethers.js
 - **Dynamic Currency Selection**: Users can switch between USDC and ETH instantly
 
+### 🔗 WalletConnect Integration
+- **WalletKit SDK**: Full wallet functionality with WalletConnect protocol
+- **dApp Connections**: Connect to any WalletConnect-compatible dApp
+- **Session Management**: Manage multiple dApp connections simultaneously
+- **Request Handling**: Support for transactions, message signing, and typed data
+
 ### 🎨 Modern UI/UX
 - **Responsive Design**: Optimized for mobile and desktop
 - **Dark Theme**: Professional dark mode interface
 - **Real-time Feedback**: Payment status updates and transaction confirmations
 - **Currency-Aware Display**: Dynamic symbols and formatting ($ for USDC, Ξ for ETH)
+- **Wallet Dashboard**: Dedicated wallet management interface
 
 ### 🔧 Technical Features
 - **MiniApp Integration**: Full Farcaster MiniApp SDK support
 - **Web3 Wallet Support**: MetaMask and other Web3 wallets
-- **Base Network**: Native support for Base Mainnet
-- **TypeScript**: Fully typed for better development experience
-- **Next.js 15**: Built with the latest Next.js features
+- **WalletConnect Protocol**: Latest Reown WalletKit implementation
+- **Multi-Chain Support**: Base mainnet and testnet support
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- MetaMask or Web3 wallet (for ETH payments)
-
-### Installation
-
-1. **Clone and Install Dependencies**
+1. **Installation**
    ```bash
-   cd buy-Me-a-Coffee
+   cd Buy-Me-A-Coffee
    npm install
    ```
 
