@@ -10,12 +10,6 @@ import { Separator } from '@/app/components/ui/separator'
 import { Copy, ExternalLink, Trash2, Wifi, WifiOff } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
-interface SessionNamespace {
-  accounts?: string[]
-  methods?: string[]
-  events?: string[]
-}
-
 export function WalletKitManager() {
   const {
     isInitialized,
