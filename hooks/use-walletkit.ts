@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { walletKitService } from '@/lib/walletkit'
-import { IWalletKit } from '@reown/walletkit'
+import { WalletKit } from '@reown/walletkit'
 
 export interface UseWalletKitReturn {
-  walletKit: IWalletKit | null
+  walletKit: WalletKit | null
   isInitialized: boolean
   isInitializing: boolean
   error: string | null
@@ -14,7 +14,7 @@ export interface UseWalletKitReturn {
 }
 
 export function useWalletKit(): UseWalletKitReturn {
-  const [walletKit, setWalletKit] = useState<IWalletKit | null>(null)
+  const [walletKit, setWalletKit] = useState<WalletKit | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -1,8 +1,8 @@
-import { WalletKit, IWalletKit } from '@reown/walletkit'
+import { WalletKit } from '@reown/walletkit'
 import { Core } from '@walletconnect/core'
 
 export class WalletKitService {
-  private walletKit: IWalletKit | null = null
+  private walletKit: WalletKit | null = null
   private core: Core | null = null
 
   async initialize(projectId: string) {
