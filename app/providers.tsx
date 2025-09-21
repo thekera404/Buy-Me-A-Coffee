@@ -3,6 +3,7 @@
 import { type ReactNode } from "react";
 import { http, WagmiProvider, createConfig } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
+import { injected, walletConnect } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
@@ -43,6 +44,10 @@ const queryClient = new QueryClient();
 export function Providers(props: { children: ReactNode }) {
   const config = wagmiAdapter?.wagmiConfig || createConfig({
     chains: isTestnet ? [baseSepolia] : [base],
+    connectors: [
+      injected(),
+      ...(projectId ? [walletConnect({ projectId })] : [])
+    ],
     transports: {
       [base.id]: http("https://mainnet.base.org"),
       [baseSepolia.id]: http("https://sepolia.base.org"),
