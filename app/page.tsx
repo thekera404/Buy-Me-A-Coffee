@@ -21,7 +21,7 @@ export default function App() {
   // Initialize MiniApp SDK
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      sdk.init()
+      sdk.actions.ready()
     }
   }, [])
 
