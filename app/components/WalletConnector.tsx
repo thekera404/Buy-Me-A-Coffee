@@ -25,13 +25,13 @@ export function WalletConnector() {
   }
 
   return (
-    <div className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
+    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
       <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 backdrop-blur-sm border border-blue-500/30">
-          <WalletIcon className="w-8 h-8 text-blue-400" />
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-[var(--app-accent)]/10 rounded-full mb-4 backdrop-blur-sm border border-[var(--app-accent)]/30">
+          <WalletIcon className="w-8 h-8 text-[var(--app-accent)]" />
         </div>
         <h3 className="text-xl font-semibold mb-2 text-white">Connect Your Wallet</h3>
-        <p className="text-gray-300 text-sm">
+        <p className="text-[#c8c8d1] text-sm">
           Connect your wallet to start sending USDC tips on Base
         </p>
       </div>
@@ -84,8 +84,8 @@ export function WalletConnector() {
         </button>
       </div>
 
-      <div className="mt-6 p-4 bg-blue-600/10 border border-blue-500/20 rounded-lg">
-        <p className="text-blue-300 text-xs text-center">
+      <div className="mt-6 p-4 bg-[var(--app-accent)]/10 border border-[var(--app-accent)]/20 rounded-lg">
+        <p className="text-[var(--app-accent)] text-xs text-center">
           🔒 Your wallet connection is secure and encrypted. We never store your private keys.
         </p>
       </div>

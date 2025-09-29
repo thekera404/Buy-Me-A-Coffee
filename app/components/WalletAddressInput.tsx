@@ -41,12 +41,12 @@ export function WalletAddressInput({ address, onChange, isValid }: WalletAddress
   }
 
   return (
-    <div className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
+    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
       <h3 className="text-lg font-semibold mb-4 text-white" id="recipient-address-label">Recipient Address</h3>
       
       <div className="relative">
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-          <WalletIcon className="w-5 h-5 text-gray-400" />
+          <WalletIcon className="w-5 h-5 text-[#c8c8d1]" />
         </div>
         <label htmlFor="recipient-address" className="sr-only">Recipient wallet address</label>
         <input
@@ -58,7 +58,7 @@ export function WalletAddressInput({ address, onChange, isValid }: WalletAddress
           aria-labelledby="recipient-address-label"
           aria-invalid={!!address && !isValid}
           aria-describedby="recipient-address-help"
-          className={`w-full h-12 pl-12 pr-12 bg-gray-700/50 border-2 rounded-lg text-white placeholder-gray-400 font-mono text-sm transition-all duration-200 focus:outline-none ${
+          className={`w-full h-12 pl-12 pr-12 bg-white/5 border-2 rounded-lg text-white placeholder-[#c8c8d1] font-mono text-sm transition-all duration-200 focus:outline-none ${
             getBorderColor()
           }`}
         />
@@ -66,12 +66,12 @@ export function WalletAddressInput({ address, onChange, isValid }: WalletAddress
         {address && (
           <button
             onClick={handleCopy}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-600/50 rounded transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-white/10 rounded transition-colors"
           >
             {copied ? (
               <CheckIcon className="w-5 h-5 text-green-400" />
             ) : (
-              <ClipboardDocumentIcon className="w-5 h-5 text-gray-400 hover:text-white" />
+              <ClipboardDocumentIcon className="w-5 h-5 text-[#c8c8d1] hover:text-white" />
             )}
           </button>
         )}
@@ -82,8 +82,8 @@ export function WalletAddressInput({ address, onChange, isValid }: WalletAddress
       </p>
       
       {address && isValid && (
-        <div className="mt-4 p-3 bg-green-600/20 border border-green-500/30 rounded-lg">
-          <p className="text-green-300 text-sm font-medium">
+        <div className="mt-4 p-3 bg-[var(--app-accent)]/10 border border-[var(--app-accent)]/30 rounded-lg">
+          <p className="text-[var(--app-accent)] text-sm font-medium">
             Ready to send USDC to this address
           </p>
         </div>

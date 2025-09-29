@@ -147,7 +147,7 @@ export function PaymentStatus({
         <h3 className="text-xl font-semibold text-center mb-2 text-green-300">
           Payment Successful!
         </h3>
-        <p className="text-center text-gray-300 mb-6">
+        <p className="text-center text-[#c8c8d1] mb-6">
           Your ${amount.toFixed(2)} USDC tip has been sent successfully
         </p>
         
