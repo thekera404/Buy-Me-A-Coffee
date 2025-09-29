@@ -83,7 +83,7 @@ export function WalletIntegrationDemo() {
         {/* Action Buttons */}
         <div className="space-y-2">
           <Link href="/wallet" className="w-full">
-            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+            <Button className="w-full bg-[var(--app-accent)] hover:bg-[var(--app-accent-hover)] text-white">
               <Wallet className="h-4 w-4 mr-2" />
               Open Wallet Dashboard
             </Button>
@@ -94,7 +94,7 @@ export function WalletIntegrationDemo() {
               variant="outline"
               size="sm"
               onClick={() => setShowDetails(!showDetails)}
-              className="w-full text-gray-300 border-gray-600 hover:bg-gray-800"
+              className="w-full text-[#c8c8d1] border-white/10 hover:bg-white/10"
             >
               {showDetails ? 'Hide' : 'Show'} Session Details
             </Button>
@@ -103,7 +103,7 @@ export function WalletIntegrationDemo() {
 
         {/* Session Details */}
         {showDetails && sessionCount > 0 && (
-          <div className="space-y-2 pt-2 border-t border-gray-700">
+          <div className="space-y-2 pt-2 border-t border-white/10">
             <h5 className="text-sm font-medium text-white">Connected dApps:</h5>
             <div className="space-y-1">
               {Object.entries(activeSessions).map(([topic, session]) => (
@@ -116,7 +116,7 @@ export function WalletIntegrationDemo() {
                       href={session.peer.metadata.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300"
+                      className="text-[var(--app-accent)] hover:opacity-90"
                     >
                       <ExternalLink className="h-3 w-3" />
                     </a>

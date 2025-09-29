@@ -194,7 +194,7 @@ export function WalletKitManager() {
                         {session.peer?.metadata?.description || 'No description'}
                       </p>
                       {session.peer?.metadata?.url && (
-                        <div className="flex items-center gap-1 text-sm text-blue-600">
+                        <div className="flex items-center gap-1 text-sm text-[var(--app-accent)]">
                           <ExternalLink className="h-3 w-3" />
                           <a
                             href={session.peer.metadata.url}

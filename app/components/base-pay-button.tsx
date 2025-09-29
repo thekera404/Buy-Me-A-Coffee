@@ -17,7 +17,7 @@ export const SignInWithBaseButton = ({ colorScheme = "light" }) => {
         justifyContent: "center",
         gap: "8px",
         padding: "12px 16px",
-        backgroundColor: isLight ? "#ffffff" : "#000000",
+        backgroundColor: isLight ? "#ffffff" : "var(--app-background)",
         border: "none",
         borderRadius: "8px",
         cursor: "pointer",
@@ -33,7 +33,7 @@ export const SignInWithBaseButton = ({ colorScheme = "light" }) => {
         style={{
           width: "16px",
           height: "16px",
-          backgroundColor: isLight ? "#0000FF" : "#FFFFFF",
+          backgroundColor: isLight ? "var(--app-accent)" : "#FFFFFF",
           borderRadius: "2px",
           flexShrink: 0,
         }}
@@ -56,7 +56,7 @@ export const BasePayButton = ({ colorScheme = "light", disabled = false, onClick
         alignItems: "center",
         justifyContent: "center",
         padding: "12px 16px",
-        backgroundColor: disabled ? "#374151" : isLight ? "#ffffff" : "#0000FF",
+        backgroundColor: disabled ? "rgba(255,255,255,0.1)" : isLight ? "#ffffff" : "var(--app-accent)",
         border: "none",
         borderRadius: "8px",
         cursor: disabled ? "not-allowed" : "pointer",
