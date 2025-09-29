@@ -43,16 +43,12 @@ export default function App() {
   }
 
   return (
-    <main aria-label="Buy Me a Coffee payment app" className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <main aria-label="Buy Me a Coffee payment app" className="min-h-screen bg-gradient-to-br from-[#0a0b2b] via-[#0c2140] to-[#0e2038] p-4">
       <div className="max-w-md mx-auto pt-8">
         {/* Header */}
         <div className="text-center mb-8">
-          {/* Brand */}
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <img src="/bmc-brand-logo.png" alt="Buy Me a Coffee logo" className="w-12 h-12 rounded" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Buy Me a Coffee</h1>
-          <p className="text-gray-600">Send secure USDC tips on Base</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Buy Me a Coffee</h1>
+          <p className="text-[#c8c8d1]">Send secure USDC tips on Base</p>
         </div>
 
         {/* Wallet Connection */}
@@ -86,10 +82,10 @@ export default function App() {
               disabled={!canPay || isPending}
               aria-busy={isPending}
               aria-live="polite"
-              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0b2b] ${
                 canPay && !isPending
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25'
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  ? 'bg-[var(--app-accent)] hover:bg-[var(--app-accent-hover)] text-white shadow-lg shadow-[var(--app-accent)]/25'
+                  : 'bg-white/10 text-[#c8c8d1] cursor-not-allowed'
               }`}
             >
               {isPending && 'Processing...'}
