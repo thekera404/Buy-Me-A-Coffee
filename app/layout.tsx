@@ -4,6 +4,7 @@ import "@coinbase/onchainkit/styles.css";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import { headers } from "next/headers";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -36,15 +37,17 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersObj = await headers();
+  const cookies = headersObj.get("cookie");
   return (
     <html lang="en">
       <body className="bg-[#0a0b2b] text-white antialiased">
-        <Providers>{children}</Providers>
+        <Providers cookies={cookies}>{children}</Providers>
       </body>
     </html>
   );
