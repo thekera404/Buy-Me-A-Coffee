@@ -43,18 +43,16 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <main aria-label="Buy Me a Coffee payment app" className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-md mx-auto pt-8">
         {/* Header */}
         <div className="text-center mb-8">
-          {/* Professional Icon */}
+          {/* Brand */}
           <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <img src="/bmc-brand-logo.png" alt="Buy Me a Coffee logo" className="w-12 h-12 rounded" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Buy a Coffee</h1>
-          <p className="text-gray-600">Send USDC payments on Base network</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Buy Me a Coffee</h1>
+          <p className="text-gray-600">Send secure USDC tips on Base</p>
         </div>
 
         {/* Wallet Connection */}
@@ -86,7 +84,9 @@ export default function App() {
             <button
               onClick={handlePayment}
               disabled={!canPay || isPending}
-              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 ${
+              aria-busy={isPending}
+              aria-live="polite"
+              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                 canPay && !isPending
                   ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25'
                   : 'bg-gray-600 text-gray-400 cursor-not-allowed'

@@ -42,18 +42,22 @@ export function WalletAddressInput({ address, onChange, isValid }: WalletAddress
 
   return (
     <div className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
-      <h3 className="text-lg font-semibold mb-4 text-white">Recipient Address</h3>
+      <h3 className="text-lg font-semibold mb-4 text-white" id="recipient-address-label">Recipient Address</h3>
       
       <div className="relative">
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
           <WalletIcon className="w-5 h-5 text-gray-400" />
         </div>
-        
+        <label htmlFor="recipient-address" className="sr-only">Recipient wallet address</label>
         <input
           type="text"
           value={address}
           onChange={(e) => onChange(e.target.value)}
           placeholder="0x..."
+          id="recipient-address"
+          aria-labelledby="recipient-address-label"
+          aria-invalid={!!address && !isValid}
+          aria-describedby="recipient-address-help"
           className={`w-full h-12 pl-12 pr-12 bg-gray-700/50 border-2 rounded-lg text-white placeholder-gray-400 font-mono text-sm transition-all duration-200 focus:outline-none ${
             getBorderColor()
           }`}
@@ -73,7 +77,7 @@ export function WalletAddressInput({ address, onChange, isValid }: WalletAddress
         )}
       </div>
       
-      <p className={`mt-2 text-sm font-medium ${getHelperTextColor()}`}>
+      <p id="recipient-address-help" className={`mt-2 text-sm font-medium ${getHelperTextColor()}`} role="status" aria-live="polite">
         {getHelperText()}
       </p>
       

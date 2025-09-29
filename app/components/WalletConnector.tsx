@@ -41,6 +41,7 @@ export function WalletConnector() {
         <button
           onClick={handleMetaMaskConnect}
           disabled={isPending}
+          aria-label="Connect with MetaMask"
           className="w-full flex items-center justify-between py-4 px-6 bg-gradient-to-r from-orange-500/10 to-orange-600/10 hover:from-orange-500/20 hover:to-orange-600/20 disabled:from-gray-600/10 disabled:to-gray-600/10 disabled:cursor-not-allowed border border-orange-500/30 hover:border-orange-500/50 text-white font-semibold rounded-xl transition-all duration-200 backdrop-blur-sm"
         >
           <div className="flex items-center gap-3">
@@ -66,6 +67,7 @@ export function WalletConnector() {
         {/* WalletConnect */}
         <button
           onClick={handleWalletConnectConnect}
+          aria-label="Connect with WalletConnect"
           className="w-full flex items-center justify-between py-4 px-6 bg-gradient-to-r from-blue-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 border border-blue-500/30 hover:border-blue-500/50 text-white font-semibold rounded-xl transition-all duration-200 backdrop-blur-sm"
         >
           <div className="flex items-center gap-3">
