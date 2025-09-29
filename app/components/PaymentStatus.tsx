@@ -47,7 +47,7 @@ export function PaymentStatus({
 
   if (state === 'preparing') {
     return (
-      <div className="bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6">
+      <div className="bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6" role="status" aria-live="polite">
         <div className="flex items-center justify-center mb-4">
           <div className="relative">
             <ArrowPathIcon className="w-12 h-12 text-blue-400 animate-spin" />
@@ -70,7 +70,7 @@ export function PaymentStatus({
 
   if (state === 'pending') {
     return (
-      <div className="bg-yellow-600/20 backdrop-blur-sm border border-yellow-500/30 rounded-xl p-6">
+      <div className="bg-yellow-600/20 backdrop-blur-sm border border-yellow-500/30 rounded-xl p-6" role="status" aria-live="polite">
         <div className="flex items-center justify-center mb-4">
           <div className="relative">
             <ArrowPathIcon className="w-12 h-12 text-yellow-400 animate-spin" />
@@ -93,7 +93,7 @@ export function PaymentStatus({
 
   if (state === 'confirming') {
     return (
-      <div className="bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6">
+      <div className="bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6" role="status" aria-live="polite">
         <div className="flex items-center justify-center mb-4">
           <div className="relative">
             <ArrowPathIcon className="w-12 h-12 text-blue-400 animate-spin" />
@@ -140,7 +140,7 @@ export function PaymentStatus({
 
   if (state === 'success') {
     return (
-      <div className="bg-green-600/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-6">
+      <div className="bg-green-600/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-6" role="status" aria-live="polite">
         <div className="flex items-center justify-center mb-4">
           <CheckCircleIcon className="w-12 h-12 text-green-400" />
         </div>
@@ -178,6 +178,7 @@ export function PaymentStatus({
                 <div className="flex gap-1">
                   <button
                     onClick={handleCopyTxId}
+                    aria-label="Copy transaction hash"
                     className="p-1 hover:bg-green-600/30 rounded transition-colors"
                   >
                     {copied ? (
@@ -188,6 +189,7 @@ export function PaymentStatus({
                   </button>
                   <button
                     onClick={handleViewOnBasescan}
+                    aria-label="View transaction on Basescan"
                     className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors"
                   >
                     View
@@ -200,6 +202,7 @@ export function PaymentStatus({
         
         <button
           onClick={onReset}
+          aria-label="Send another tip"
           className="w-full py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-200"
         >
           Send Another Tip
@@ -210,7 +213,7 @@ export function PaymentStatus({
 
   if (state === 'error') {
     return (
-      <div className="bg-red-600/20 backdrop-blur-sm border border-red-500/30 rounded-xl p-6">
+      <div className="bg-red-600/20 backdrop-blur-sm border border-red-500/30 rounded-xl p-6" role="status" aria-live="polite">
         <div className="flex items-center justify-center mb-4">
           <XCircleIcon className="w-12 h-12 text-red-400" />
         </div>
@@ -230,12 +233,14 @@ export function PaymentStatus({
         <div className="flex gap-3">
           <button
             onClick={onRetry}
+            aria-label="Retry payment"
             className="flex-1 py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all duration-200"
           >
             Try Again
           </button>
           <button
             onClick={onReset}
+            aria-label="Reset and start over"
             className="flex-1 py-3 px-6 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-xl transition-all duration-200"
           >
             Start Over
